@@ -2,7 +2,7 @@ import type { Point, Rotation, Size } from "./geometry";
 import type { ComponentSize } from "./library";
 
 /** Формат итогового холста. */
-export type CanvasFormatId = "16:9" | "4:3" | "1:1" | "9:16" | "3:1";
+export type CanvasFormatId = "16:9" | "4:3" | "1:1" | "4:5" | "9:16" | "3:1";
 
 export type CanvasFormat = {
   id: CanvasFormatId;

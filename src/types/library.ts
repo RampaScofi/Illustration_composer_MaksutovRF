@@ -1,50 +1,62 @@
 import type { Size, ViewBox } from "./geometry";
+import type { ColorScheme } from "./palette";
 
-/**
- * Два размера компонентов библиотеки.
- * В исходном Figma-файле иллюстрации разделены на секции «Размер L» и «Размер S»,
- * разница — в детализации. Конструктор обязан давать выбор размера.
- */
+/** Два размера компонентов библиотеки. */
 export type ComponentSize = "L" | "S";
 
+/** Роль объекта в сцене. */
+export type ComponentRole = "primary" | "background" | "backdrop";
+
 /**
- * Роль объекта в сцене.
- * «Главные объекты» — цветные, «Фоновые объекты» — монохромные.
- * Ограничение исходника: цвета объектов не могут использоваться в фонах,
- * цвета фонов могут использоваться в объектах.
+ * Ограничение по перекраске:
+ * "full" — можно перекрасить в любой цвет из палитры.
+ * "monochrome-only" — фоновый объект, допускает только нейтральные слоты.
+ * "none" — задний фон, не перекрашивается.
  */
-export type ComponentRole = "primary" | "background";
+export type RepaintConstraint = "full" | "monochrome-only" | "none";
 
 /**
  * Один переиспользуемый векторный компонент.
- * Ссылается на заранее подготовленный SVG-файл, а не на сгенерированное изображение.
+ * Ссылается на заранее подготовленный SVG-файл.
  */
 export type LibraryComponent = {
-  /** Стабильный идентификатoр внутри библиотеки. */
+  /** Стабильный идентификатор внутри библиотеки. */
   id: string;
-  /** Человекочитаемое имя, например «Пазлы», «Телефон». */
+  /** Человекочитаемое имя, например «Пазлы», «Книга». */
   name: string;
-  size: ComponentSize;
-  role: ComponentRole;
+  /** Подтверждено ли имя из исходного Figma-файла (true = имя не техническое). */
+  nameConfirmed: boolean;
+  /** Синонимы для поиска (разные регистры, единственное/множественное число). */
+  aliases: string[];
+  /** Смысловые метки для подбора по метафоре (этап AI-подбора). */
+  tags: string[];
   /** Иллюстрация-источник, из которой извлечён компонент. */
   sourceIllustrationId: string;
   /** Node ID во Figma для прослеживаемости происхождения объекта. */
   figmaNodeId?: string;
-  /** Путь к SVG-файлу внутри библиотеки, например /assets/illustrations/L/puzzle.svg */
+  size: ComponentSize;
+  role: ComponentRole;
+  /** Путь к SVG-файлу внутри библиотеки, например /assets/illustrations/L/primary/puzzle.svg */
   svgPath: string;
   viewBox: ViewBox;
   intrinsicSize: Size;
-  /** Смысловые метки для подбора по метафоре (этап AI-подбора). */
-  tags: string[];
+  /** Идентификаторы цветовых схем, в которых объект встречается в исходнике. */
+  schemes: string[];
+  /** Ограничение по перекраске. */
+  repaint: RepaintConstraint;
+  /** Количество дочерних узлов во Figma (для аудита сложности). */
+  sourceNodeCount: number;
 };
 
 /**
- * Манифест библиотеки — единая точка входа дляPanели библиотеки и сборщика.
- * Содержимое формируется из реального экспорта Figma, а не создаётся вручную.
+ * Манифест библиотеки — единая точка входа для панели библиотеки и сборщика.
+ * Состоит из компонентов и цветовых схем, полученных из Figma.
  */
 export type LibraryManifest = {
   version: string;
   sourceFileKey?: string;
+  sourcePageId?: string;
   generatedAt?: string;
+  schemes: ColorScheme[];
   components: LibraryComponent[];
 };

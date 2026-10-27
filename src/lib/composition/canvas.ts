@@ -9,6 +9,7 @@ export const CANVAS_FORMATS: readonly CanvasFormat[] = [
   { id: "16:9", label: "Обложка 16:9", width: 1920, height: 1080 },
   { id: "4:3", label: "Статья 4:3", width: 1600, height: 1200 },
   { id: "1:1", label: "Квадрат 1:1", width: 1200, height: 1200 },
+  { id: "4:5", label: "Вертикаль 4:5", width: 1080, height: 1350 },
   { id: "9:16", label: "Сторис 9:16", width: 1080, height: 1920 },
   { id: "3:1", label: "Баннер 3:1", width: 1800, height: 600 },
 ] as const;

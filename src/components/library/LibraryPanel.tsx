@@ -1,51 +1,117 @@
-import type { ComponentSize, LibraryComponent } from "@/types/library";
+"use client";
+
+import { useState, useMemo } from "react";
+import type { LibraryComponent, ComponentSize } from "@/types/library";
 import { EmptyState, PanelFrame } from "@/components/panel/PanelFrame";
 
-type LibraryPanelProps = {
+type Props = {
   components: LibraryComponent[];
   activeSize: ComponentSize;
-  notice: string | null;
+  onSizeChange: (size: ComponentSize) => void;
+  onAddComponent: (componentId: string) => void;
 };
 
-const SIZE_LABEL: Record<ComponentSize, string> = {
-  L: "L — полная детализация",
-  S: "S — упрощённая детализация",
-};
+type RoleFilter = "all" | "primary" | "background";
 
-/**
- * Левая панель: список компонентов библиотеки с фильтром по размерному набору.
- * Панель презентационная — состояние подключается на этапе сборки редактора.
- */
-export function LibraryPanel({ components, activeSize, notice }: LibraryPanelProps) {
-  const visible = components.filter((component) => component.size === activeSize);
+export function LibraryPanel({ components, activeSize, onSizeChange, onAddComponent }: Props) {
+  const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+
+  const filtered = useMemo(() => {
+    let result = components.filter((c) => c.size === activeSize && c.role !== "backdrop");
+    if (roleFilter !== "all") result = result.filter((c) => c.role === roleFilter);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.aliases.some((a) => a.toLowerCase().includes(q)) ||
+          c.tags.some((t) => t.toLowerCase().includes(q)),
+      );
+    }
+    return result;
+  }, [components, activeSize, roleFilter, query]);
 
   return (
-    <PanelFrame
-      title="Библиотека компонентов"
-      hint={`Размерный набор: ${SIZE_LABEL[activeSize]}`}
-      className="border-r"
-    >
-      {notice ? <EmptyState message={notice} /> : null}
-
-      {notice === null && visible.length === 0 ? (
-        <EmptyState message="В выбранном размерном наборе нет компонентов." />
-      ) : null}
-
-      {visible.length > 0 ? (
-        <ul className="space-y-1">
-          {visible.map((component) => (
-            <li
-              key={component.id}
-              className="flex items-baseline justify-between gap-2 rounded px-2 py-1.5 text-sm text-zinc-800 hover:bg-zinc-100"
+    <PanelFrame title="Библиотека" hint="Нажмите на компонент, чтобы добавить на холст">
+      <div className="space-y-2">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Поиск по названию, тегу…"
+          className="w-full rounded border border-zinc-300 bg-zinc-50 px-2.5 py-1.5 text-sm placeholder:text-zinc-400 focus:border-indigo-400 focus:outline-none"
+          aria-label="Поиск компонентов"
+        />
+        <div className="flex gap-1">
+          {(["all", "primary", "background"] as const).map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRoleFilter(r)}
+              className={`rounded px-2 py-0.5 text-[11px] font-medium ${
+                roleFilter === r
+                  ? "bg-indigo-600 text-white"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+              }`}
             >
-              <span className="truncate">{component.name}</span>
-              <span className="shrink-0 text-[11px] uppercase tracking-wide text-zinc-400">
-                {component.role === "primary" ? "объект" : "фон"}
-              </span>
+              {r === "all" ? "Все" : r === "primary" ? "Объекты" : "Фон"}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1">
+          {(["L", "S"] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => onSizeChange(s)}
+              className={`rounded px-2 py-0.5 text-[11px] font-medium ${
+                activeSize === s
+                  ? "bg-zinc-900 text-white"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="mt-3">
+          <EmptyState
+            message={
+              components.length === 0
+                ? "Библиотека не подключена."
+                : "Ничего не найдено по запросу."
+            }
+          />
+        </div>
+      ) : (
+        <ul className="mt-3 grid grid-cols-2 gap-2">
+          {filtered.map((comp) => (
+            <li key={comp.id}>
+              <button
+                type="button"
+                onClick={() => onAddComponent(comp.id)}
+                className="group flex w-full flex-col items-center gap-1 rounded-lg border border-zinc-200 bg-white p-2 text-center transition hover:border-indigo-300 hover:shadow-sm"
+                title={comp.nameConfirmed ? comp.name : `Имя не подтверждено: ${comp.name}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={comp.svgPath}
+                  alt={comp.nameConfirmed ? comp.name : comp.id}
+                  className="h-12 w-full object-contain"
+                  draggable={false}
+                />
+                <span className="truncate text-[10px] leading-tight text-zinc-600 group-hover:text-indigo-700">
+                  {comp.nameConfirmed ? comp.name : "?"}
+                </span>
+              </button>
             </li>
           ))}
         </ul>
-      ) : null}
+      )}
     </PanelFrame>
   );
 }

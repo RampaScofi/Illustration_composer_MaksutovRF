@@ -1,0 +1,1890 @@
+{
+  "version": "1",
+  "sourceFileKey": "9fcdDYQ8sWKSC7ALKvXPqg",
+  "sourcePageId": "0:1",
+  "generatedAt": "2026-10-26T14:12:49.516Z",
+  "schemes": [
+    {
+      "id": "violet",
+      "name": "Схема 1 · фиолетовая",
+      "colors": [
+        {
+          "slot": "background",
+          "hex": "#d7cdf5"
+        },
+        {
+          "slot": "background",
+          "hex": "#aa9bf0"
+        },
+        {
+          "slot": "background",
+          "hex": "#7864d7"
+        },
+        {
+          "slot": "object",
+          "hex": "#f9ecb0"
+        },
+        {
+          "slot": "object",
+          "hex": "#f9a3aa"
+        },
+        {
+          "slot": "object",
+          "hex": "#ffe3e1"
+        },
+        {
+          "slot": "neutral",
+          "hex": "#181817"
+        },
+        {
+          "slot": "neutral",
+          "hex": "#ffffff"
+        }
+      ]
+    },
+    {
+      "id": "peach",
+      "name": "Схема 2 · персиковая",
+      "colors": [
+        {
+          "slot": "background",
+          "hex": "#fdd7b9"
+        },
+        {
+          "slot": "background",
+          "hex": "#fac896"
+        },
+        {
+          "slot": "background",
+          "hex": "#d27532"
+        },
+        {
+          "slot": "object",
+          "hex": "#f9ecb0"
+        },
+        {
+          "slot": "object",
+          "hex": "#80dada"
+        },
+        {
+          "slot": "object",
+          "hex": "#beebeb"
+        },
+        {
+          "slot": "neutral",
+          "hex": "#181817"
+        },
+        {
+          "slot": "neutral",
+          "hex": "#ffffff"
+        }
+      ]
+    },
+    {
+      "id": "mint",
+      "name": "Схема 3 · мятная",
+      "colors": [
+        {
+          "slot": "background",
+          "hex": "#beebeb"
+        },
+        {
+          "slot": "background",
+          "hex": "#80dada"
+        },
+        {
+          "slot": "background",
+          "hex": "#5abebe"
+        },
+        {
+          "slot": "object",
+          "hex": "#ffd4f2"
+        },
+        {
+          "slot": "object",
+          "hex": "#6d7bfc"
+        },
+        {
+          "slot": "object",
+          "hex": "#b6c6fe"
+        },
+        {
+          "slot": "neutral",
+          "hex": "#181817"
+        },
+        {
+          "slot": "neutral",
+          "hex": "#ffffff"
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "L-primary-puzzle",
+      "name": "Пазлы",
+      "nameConfirmed": true,
+      "aliases": [
+        "пазл",
+        "пазлы",
+        "puzzle",
+        "головоломка"
+      ],
+      "tags": [
+        "обучение",
+        "развитие",
+        "часть целого",
+        "задача"
+      ],
+      "sourceIllustrationId": "L-puzzle",
+      "figmaNodeId": "21:417",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/puzzle.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 545,
+        "height": 314
+      },
+      "intrinsicSize": {
+        "width": 545,
+        "height": 314
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 58
+    },
+    {
+      "id": "L-primary-book",
+      "name": "Книга",
+      "nameConfirmed": true,
+      "aliases": [
+        "книга",
+        "книги",
+        "book",
+        "открытая книга"
+      ],
+      "tags": [
+        "обучение",
+        "знания",
+        "чтение",
+        "развитие",
+        "источник"
+      ],
+      "sourceIllustrationId": "L-book",
+      "figmaNodeId": "21:29965",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/book.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1446,
+        "height": 977
+      },
+      "intrinsicSize": {
+        "width": 1446,
+        "height": 977
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 54
+    },
+    {
+      "id": "L-primary-phone",
+      "name": "Телефон",
+      "nameConfirmed": true,
+      "aliases": [
+        "телефон",
+        "смартфон",
+        "телефоны",
+        "phone",
+        "гаджет"
+      ],
+      "tags": [
+        "технологии",
+        "коммуникация",
+        "мобильность",
+        "гаджет",
+        "приложение"
+      ],
+      "sourceIllustrationId": "L-phone",
+      "figmaNodeId": "21:25472",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/phone.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 797,
+        "height": 462
+      },
+      "intrinsicSize": {
+        "width": 797,
+        "height": 462
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 156
+    },
+    {
+      "id": "L-primary-headphones",
+      "name": "Наушники",
+      "nameConfirmed": true,
+      "aliases": [
+        "наушники",
+        "headphones",
+        "гарнитура"
+      ],
+      "tags": [
+        "звук",
+        "обучение",
+        "подкаст",
+        "концентрация",
+        "гаджет"
+      ],
+      "sourceIllustrationId": "L-headphones",
+      "figmaNodeId": "23:122",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/headphones.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 889,
+        "height": 692
+      },
+      "intrinsicSize": {
+        "width": 889,
+        "height": 692
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 85
+    },
+    {
+      "id": "L-primary-lamp",
+      "name": "Лампа",
+      "nameConfirmed": true,
+      "aliases": [
+        "лампа",
+        "торшер",
+        "lamp",
+        "светильник",
+        "освещение"
+      ],
+      "tags": [
+        "идея",
+        "вдохновение",
+        "освещение",
+        "решение",
+        "работа"
+      ],
+      "sourceIllustrationId": "L-lamp",
+      "figmaNodeId": "23:121",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/lamp.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 946,
+        "height": 1129
+      },
+      "intrinsicSize": {
+        "width": 946,
+        "height": 1129
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 28
+    },
+    {
+      "id": "L-primary-wallet",
+      "name": "Кошелек",
+      "nameConfirmed": true,
+      "aliases": [
+        "кошелек",
+        "бумажник",
+        "wallet",
+        "деньги"
+      ],
+      "tags": [
+        "деньги",
+        "финансы",
+        "оплата",
+        "бюджет",
+        "накопления"
+      ],
+      "sourceIllustrationId": "L-wallet",
+      "figmaNodeId": "23:211",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/wallet.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 631,
+        "height": 397
+      },
+      "intrinsicSize": {
+        "width": 631,
+        "height": 397
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 87
+    },
+    {
+      "id": "L-primary-pen",
+      "name": "Ручка",
+      "nameConfirmed": true,
+      "aliases": [
+        "ручка",
+        "перо",
+        "pen",
+        "писание"
+      ],
+      "tags": [
+        "письмо",
+        "документ",
+        "создание",
+        "редактирование",
+        "идея"
+      ],
+      "sourceIllustrationId": "L-pen",
+      "figmaNodeId": "24:1734",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/pen.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 509,
+        "height": 286
+      },
+      "intrinsicSize": {
+        "width": 509,
+        "height": 286
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 25
+    },
+    {
+      "id": "L-primary-folder",
+      "name": "Папка",
+      "nameConfirmed": true,
+      "aliases": [
+        "папка",
+        "folder",
+        "каталог"
+      ],
+      "tags": [
+        "документы",
+        "хранение",
+        "порядок",
+        "архив",
+        "работа"
+      ],
+      "sourceIllustrationId": "L-folder",
+      "figmaNodeId": "24:1899",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/folder.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1241,
+        "height": 659
+      },
+      "intrinsicSize": {
+        "width": 1241,
+        "height": 659
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 23
+    },
+    {
+      "id": "L-primary-coin",
+      "name": "Монета",
+      "nameConfirmed": true,
+      "aliases": [
+        "монета",
+        "монеты",
+        "coin",
+        "финансы",
+        "оплата"
+      ],
+      "tags": [
+        "деньги",
+        "финансы",
+        "оплата",
+        "стоимость",
+        "бонус"
+      ],
+      "sourceIllustrationId": "L-coin",
+      "figmaNodeId": "24:2207",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/coin.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 287,
+        "height": 189
+      },
+      "intrinsicSize": {
+        "width": 287,
+        "height": 189
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 139
+    },
+    {
+      "id": "L-primary-group-344",
+      "name": "Group 2136136344",
+      "nameConfirmed": false,
+      "aliases": [],
+      "tags": [],
+      "sourceIllustrationId": "L-group-344",
+      "figmaNodeId": "28:11628",
+      "size": "L",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/L/primary/group-344.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 591,
+        "height": 748
+      },
+      "intrinsicSize": {
+        "width": 591,
+        "height": 748
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 136
+    },
+    {
+      "id": "L-background-puzzle",
+      "name": "Пазлы",
+      "nameConfirmed": true,
+      "aliases": [
+        "пазл",
+        "пазлы",
+        "puzzle",
+        "головоломка"
+      ],
+      "tags": [
+        "обучение",
+        "развитие",
+        "часть целого",
+        "задача"
+      ],
+      "sourceIllustrationId": "L-puzzle",
+      "figmaNodeId": "24:6214",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/puzzle.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 545,
+        "height": 314
+      },
+      "intrinsicSize": {
+        "width": 545,
+        "height": 314
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 58
+    },
+    {
+      "id": "L-background-book",
+      "name": "Книга",
+      "nameConfirmed": true,
+      "aliases": [
+        "книга",
+        "книги",
+        "book",
+        "открытая книга"
+      ],
+      "tags": [
+        "обучение",
+        "знания",
+        "чтение",
+        "развитие",
+        "источник"
+      ],
+      "sourceIllustrationId": "L-book",
+      "figmaNodeId": "24:6273",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/book.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1446,
+        "height": 977
+      },
+      "intrinsicSize": {
+        "width": 1446,
+        "height": 977
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 54
+    },
+    {
+      "id": "L-background-phone",
+      "name": "Телефон",
+      "nameConfirmed": true,
+      "aliases": [
+        "телефон",
+        "смартфон",
+        "телефоны",
+        "phone",
+        "гаджет"
+      ],
+      "tags": [
+        "технологии",
+        "коммуникация",
+        "мобильность",
+        "гаджет",
+        "приложение"
+      ],
+      "sourceIllustrationId": "L-phone",
+      "figmaNodeId": "24:6327",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/phone.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 797,
+        "height": 462
+      },
+      "intrinsicSize": {
+        "width": 797,
+        "height": 462
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 156
+    },
+    {
+      "id": "L-background-headphones",
+      "name": "Наушники",
+      "nameConfirmed": true,
+      "aliases": [
+        "наушники",
+        "headphones",
+        "гарнитура"
+      ],
+      "tags": [
+        "звук",
+        "обучение",
+        "подкаст",
+        "концентрация",
+        "гаджет"
+      ],
+      "sourceIllustrationId": "L-headphones",
+      "figmaNodeId": "24:6484",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/headphones.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 889,
+        "height": 692
+      },
+      "intrinsicSize": {
+        "width": 889,
+        "height": 692
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 85
+    },
+    {
+      "id": "L-background-lamp",
+      "name": "Лампа",
+      "nameConfirmed": true,
+      "aliases": [
+        "лампа",
+        "торшер",
+        "lamp",
+        "светильник",
+        "освещение"
+      ],
+      "tags": [
+        "идея",
+        "вдохновение",
+        "освещение",
+        "решение",
+        "работа"
+      ],
+      "sourceIllustrationId": "L-lamp",
+      "figmaNodeId": "24:6569",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/lamp.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 946,
+        "height": 1129
+      },
+      "intrinsicSize": {
+        "width": 946,
+        "height": 1129
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 28
+    },
+    {
+      "id": "L-background-wallet",
+      "name": "Кошелек",
+      "nameConfirmed": true,
+      "aliases": [
+        "кошелек",
+        "бумажник",
+        "wallet",
+        "деньги"
+      ],
+      "tags": [
+        "деньги",
+        "финансы",
+        "оплата",
+        "бюджет",
+        "накопления"
+      ],
+      "sourceIllustrationId": "L-wallet",
+      "figmaNodeId": "24:6660",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/wallet.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 631,
+        "height": 397
+      },
+      "intrinsicSize": {
+        "width": 631,
+        "height": 397
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 87
+    },
+    {
+      "id": "L-background-pen",
+      "name": "Ручка",
+      "nameConfirmed": true,
+      "aliases": [
+        "ручка",
+        "перо",
+        "pen",
+        "писание"
+      ],
+      "tags": [
+        "письмо",
+        "документ",
+        "создание",
+        "редактирование",
+        "идея"
+      ],
+      "sourceIllustrationId": "L-pen",
+      "figmaNodeId": "24:6747",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/pen.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 509,
+        "height": 286
+      },
+      "intrinsicSize": {
+        "width": 509,
+        "height": 286
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 25
+    },
+    {
+      "id": "L-background-folder",
+      "name": "Папка",
+      "nameConfirmed": true,
+      "aliases": [
+        "папка",
+        "folder",
+        "каталог"
+      ],
+      "tags": [
+        "документы",
+        "хранение",
+        "порядок",
+        "архив",
+        "работа"
+      ],
+      "sourceIllustrationId": "L-folder",
+      "figmaNodeId": "24:6772",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/folder.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1241,
+        "height": 659
+      },
+      "intrinsicSize": {
+        "width": 1241,
+        "height": 659
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 23
+    },
+    {
+      "id": "L-background-coin",
+      "name": "Монета",
+      "nameConfirmed": true,
+      "aliases": [
+        "монета",
+        "монеты",
+        "coin",
+        "финансы",
+        "оплата"
+      ],
+      "tags": [
+        "деньги",
+        "финансы",
+        "оплата",
+        "стоимость",
+        "бонус"
+      ],
+      "sourceIllustrationId": "L-coin",
+      "figmaNodeId": "24:6795",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/coin.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 287,
+        "height": 189
+      },
+      "intrinsicSize": {
+        "width": 287,
+        "height": 189
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 139
+    },
+    {
+      "id": "L-background-group-347",
+      "name": "Group 2136136347",
+      "nameConfirmed": false,
+      "aliases": [],
+      "tags": [],
+      "sourceIllustrationId": "L-group-347",
+      "figmaNodeId": "30:11902",
+      "size": "L",
+      "role": "background",
+      "svgPath": "/assets/illustrations/L/background/group-347.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 591,
+        "height": 748
+      },
+      "intrinsicSize": {
+        "width": 591,
+        "height": 748
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 136
+    },
+    {
+      "id": "S-primary-book",
+      "name": "Книга",
+      "nameConfirmed": true,
+      "aliases": [
+        "книга",
+        "книги",
+        "book",
+        "открытая книга"
+      ],
+      "tags": [
+        "обучение",
+        "знания",
+        "чтение",
+        "развитие",
+        "источник"
+      ],
+      "sourceIllustrationId": "S-book",
+      "figmaNodeId": "24:3810",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/book.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 723,
+        "height": 489
+      },
+      "intrinsicSize": {
+        "width": 723,
+        "height": 489
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 53
+    },
+    {
+      "id": "S-primary-phone",
+      "name": "Телефон",
+      "nameConfirmed": true,
+      "aliases": [
+        "телефон",
+        "смартфон",
+        "телефоны",
+        "phone",
+        "гаджет"
+      ],
+      "tags": [
+        "технологии",
+        "коммуникация",
+        "мобильность",
+        "гаджет",
+        "приложение"
+      ],
+      "sourceIllustrationId": "S-phone",
+      "figmaNodeId": "24:4746",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/phone.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 399,
+        "height": 231
+      },
+      "intrinsicSize": {
+        "width": 399,
+        "height": 231
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 97
+    },
+    {
+      "id": "S-primary-puzzle",
+      "name": "Пазлы",
+      "nameConfirmed": true,
+      "aliases": [
+        "пазл",
+        "пазлы",
+        "puzzle",
+        "головоломка"
+      ],
+      "tags": [
+        "обучение",
+        "развитие",
+        "часть целого",
+        "задача"
+      ],
+      "sourceIllustrationId": "S-puzzle",
+      "figmaNodeId": "24:4903",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/puzzle.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 273,
+        "height": 157
+      },
+      "intrinsicSize": {
+        "width": 273,
+        "height": 157
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 58
+    },
+    {
+      "id": "S-primary-coin",
+      "name": "Монета",
+      "nameConfirmed": true,
+      "aliases": [
+        "монета",
+        "монеты",
+        "coin",
+        "финансы",
+        "оплата"
+      ],
+      "tags": [
+        "деньги",
+        "финансы",
+        "оплата",
+        "стоимость",
+        "бонус"
+      ],
+      "sourceIllustrationId": "S-coin",
+      "figmaNodeId": "24:5345",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/coin.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 153,
+        "height": 101
+      },
+      "intrinsicSize": {
+        "width": 153,
+        "height": 101
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 133
+    },
+    {
+      "id": "S-primary-headphones",
+      "name": "Наушники",
+      "nameConfirmed": true,
+      "aliases": [
+        "наушники",
+        "headphones",
+        "гарнитура"
+      ],
+      "tags": [
+        "звук",
+        "обучение",
+        "подкаст",
+        "концентрация",
+        "гаджет"
+      ],
+      "sourceIllustrationId": "S-headphones",
+      "figmaNodeId": "24:5089",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/headphones.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 445,
+        "height": 346
+      },
+      "intrinsicSize": {
+        "width": 445,
+        "height": 346
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 80
+    },
+    {
+      "id": "S-primary-lamp",
+      "name": "Лампа",
+      "nameConfirmed": true,
+      "aliases": [
+        "лампа",
+        "торшер",
+        "lamp",
+        "светильник",
+        "освещение"
+      ],
+      "tags": [
+        "идея",
+        "вдохновение",
+        "освещение",
+        "решение",
+        "работа"
+      ],
+      "sourceIllustrationId": "S-lamp",
+      "figmaNodeId": "24:5485",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/lamp.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 473,
+        "height": 565
+      },
+      "intrinsicSize": {
+        "width": 473,
+        "height": 565
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 28
+    },
+    {
+      "id": "S-primary-folder",
+      "name": "Папка",
+      "nameConfirmed": true,
+      "aliases": [
+        "папка",
+        "folder",
+        "каталог"
+      ],
+      "tags": [
+        "документы",
+        "хранение",
+        "порядок",
+        "архив",
+        "работа"
+      ],
+      "sourceIllustrationId": "S-folder",
+      "figmaNodeId": "24:4430",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/folder.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 621,
+        "height": 330
+      },
+      "intrinsicSize": {
+        "width": 621,
+        "height": 330
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 21
+    },
+    {
+      "id": "S-primary-pen",
+      "name": "Ручка",
+      "nameConfirmed": true,
+      "aliases": [
+        "ручка",
+        "перо",
+        "pen",
+        "писание"
+      ],
+      "tags": [
+        "письмо",
+        "документ",
+        "создание",
+        "редактирование",
+        "идея"
+      ],
+      "sourceIllustrationId": "S-pen",
+      "figmaNodeId": "24:4287",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/pen.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 255,
+        "height": 143
+      },
+      "intrinsicSize": {
+        "width": 255,
+        "height": 143
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 25
+    },
+    {
+      "id": "S-primary-wallet",
+      "name": "Кошелек",
+      "nameConfirmed": true,
+      "aliases": [
+        "кошелек",
+        "бумажник",
+        "wallet",
+        "деньги"
+      ],
+      "tags": [
+        "деньги",
+        "финансы",
+        "оплата",
+        "бюджет",
+        "накопления"
+      ],
+      "sourceIllustrationId": "S-wallet",
+      "figmaNodeId": "24:4594",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/wallet.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 316,
+        "height": 199
+      },
+      "intrinsicSize": {
+        "width": 316,
+        "height": 199
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 84
+    },
+    {
+      "id": "S-primary-group-345",
+      "name": "Group 2136136345",
+      "nameConfirmed": false,
+      "aliases": [],
+      "tags": [],
+      "sourceIllustrationId": "S-group-345",
+      "figmaNodeId": "28:11629",
+      "size": "S",
+      "role": "primary",
+      "svgPath": "/assets/illustrations/S/primary/group-345.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 324,
+        "height": 409
+      },
+      "intrinsicSize": {
+        "width": 324,
+        "height": 409
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "full",
+      "sourceNodeCount": 136
+    },
+    {
+      "id": "S-background-book",
+      "name": "Книга",
+      "nameConfirmed": true,
+      "aliases": [
+        "книга",
+        "книги",
+        "book",
+        "открытая книга"
+      ],
+      "tags": [
+        "обучение",
+        "знания",
+        "чтение",
+        "развитие",
+        "источник"
+      ],
+      "sourceIllustrationId": "S-book",
+      "figmaNodeId": "24:6934",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/book.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 723,
+        "height": 489
+      },
+      "intrinsicSize": {
+        "width": 723,
+        "height": 489
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 56
+    },
+    {
+      "id": "S-background-phone",
+      "name": "Телефон",
+      "nameConfirmed": true,
+      "aliases": [
+        "телефон",
+        "смартфон",
+        "телефоны",
+        "phone",
+        "гаджет"
+      ],
+      "tags": [
+        "технологии",
+        "коммуникация",
+        "мобильность",
+        "гаджет",
+        "приложение"
+      ],
+      "sourceIllustrationId": "S-phone",
+      "figmaNodeId": "24:6990",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/phone.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 399,
+        "height": 231
+      },
+      "intrinsicSize": {
+        "width": 399,
+        "height": 231
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 156
+    },
+    {
+      "id": "S-background-puzzle",
+      "name": "Пазлы",
+      "nameConfirmed": true,
+      "aliases": [
+        "пазл",
+        "пазлы",
+        "puzzle",
+        "головоломка"
+      ],
+      "tags": [
+        "обучение",
+        "развитие",
+        "часть целого",
+        "задача"
+      ],
+      "sourceIllustrationId": "S-puzzle",
+      "figmaNodeId": "24:7147",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/puzzle.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 273,
+        "height": 157
+      },
+      "intrinsicSize": {
+        "width": 273,
+        "height": 157
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 58
+    },
+    {
+      "id": "S-background-coin",
+      "name": "Монета",
+      "nameConfirmed": true,
+      "aliases": [
+        "монета",
+        "монеты",
+        "coin",
+        "финансы",
+        "оплата"
+      ],
+      "tags": [
+        "деньги",
+        "финансы",
+        "оплата",
+        "стоимость",
+        "бонус"
+      ],
+      "sourceIllustrationId": "S-coin",
+      "figmaNodeId": "24:7205",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/coin.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 153,
+        "height": 101
+      },
+      "intrinsicSize": {
+        "width": 153,
+        "height": 101
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 139
+    },
+    {
+      "id": "S-background-headphones",
+      "name": "Наушники",
+      "nameConfirmed": true,
+      "aliases": [
+        "наушники",
+        "headphones",
+        "гарнитура"
+      ],
+      "tags": [
+        "звук",
+        "обучение",
+        "подкаст",
+        "концентрация",
+        "гаджет"
+      ],
+      "sourceIllustrationId": "S-headphones",
+      "figmaNodeId": "24:7344",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/headphones.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 445,
+        "height": 346
+      },
+      "intrinsicSize": {
+        "width": 445,
+        "height": 346
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 85
+    },
+    {
+      "id": "S-background-lamp",
+      "name": "Лампа",
+      "nameConfirmed": true,
+      "aliases": [
+        "лампа",
+        "торшер",
+        "lamp",
+        "светильник",
+        "освещение"
+      ],
+      "tags": [
+        "идея",
+        "вдохновение",
+        "освещение",
+        "решение",
+        "работа"
+      ],
+      "sourceIllustrationId": "S-lamp",
+      "figmaNodeId": "24:7429",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/lamp.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 473,
+        "height": 565
+      },
+      "intrinsicSize": {
+        "width": 473,
+        "height": 565
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 28
+    },
+    {
+      "id": "S-background-folder",
+      "name": "Папка",
+      "nameConfirmed": true,
+      "aliases": [
+        "папка",
+        "folder",
+        "каталог"
+      ],
+      "tags": [
+        "документы",
+        "хранение",
+        "порядок",
+        "архив",
+        "работа"
+      ],
+      "sourceIllustrationId": "S-folder",
+      "figmaNodeId": "24:7520",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/folder.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 621,
+        "height": 330
+      },
+      "intrinsicSize": {
+        "width": 621,
+        "height": 330
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 23
+    },
+    {
+      "id": "S-background-pen",
+      "name": "Ручка",
+      "nameConfirmed": true,
+      "aliases": [
+        "ручка",
+        "перо",
+        "pen",
+        "писание"
+      ],
+      "tags": [
+        "письмо",
+        "документ",
+        "создание",
+        "редактирование",
+        "идея"
+      ],
+      "sourceIllustrationId": "S-pen",
+      "figmaNodeId": "24:7543",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/pen.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 255,
+        "height": 143
+      },
+      "intrinsicSize": {
+        "width": 255,
+        "height": 143
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 25
+    },
+    {
+      "id": "S-background-wallet",
+      "name": "Кошелек",
+      "nameConfirmed": true,
+      "aliases": [
+        "кошелек",
+        "бумажник",
+        "wallet",
+        "деньги"
+      ],
+      "tags": [
+        "деньги",
+        "финансы",
+        "оплата",
+        "бюджет",
+        "накопления"
+      ],
+      "sourceIllustrationId": "S-wallet",
+      "figmaNodeId": "24:7568",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/wallet.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 316,
+        "height": 199
+      },
+      "intrinsicSize": {
+        "width": 316,
+        "height": 199
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 87
+    },
+    {
+      "id": "S-background-group-346",
+      "name": "Group 2136136346",
+      "nameConfirmed": false,
+      "aliases": [],
+      "tags": [],
+      "sourceIllustrationId": "S-group-346",
+      "figmaNodeId": "28:11766",
+      "size": "S",
+      "role": "background",
+      "svgPath": "/assets/illustrations/S/background/group-346.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 324,
+        "height": 409
+      },
+      "intrinsicSize": {
+        "width": 324,
+        "height": 409
+      },
+      "schemes": [
+        "violet",
+        "peach",
+        "mint"
+      ],
+      "repaint": "monochrome-only",
+      "sourceNodeCount": 136
+    },
+    {
+      "id": "L-backdrop-backdrop-violet",
+      "name": "Фон фиолетовый",
+      "nameConfirmed": true,
+      "aliases": [
+        "фон",
+        "backdrop",
+        "подложка"
+      ],
+      "tags": [
+        "фон",
+        "подложка",
+        "схема"
+      ],
+      "sourceIllustrationId": "L-backdrop-violet",
+      "figmaNodeId": "21:25258",
+      "size": "L",
+      "role": "backdrop",
+      "svgPath": "/assets/illustrations/L/backdrop/backdrop-violet.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1000,
+        "height": 1000
+      },
+      "intrinsicSize": {
+        "width": 1000,
+        "height": 1000
+      },
+      "schemes": [
+        "violet"
+      ],
+      "repaint": "none",
+      "sourceNodeCount": 65
+    },
+    {
+      "id": "L-backdrop-backdrop-peach",
+      "name": "Фон персиковый",
+      "nameConfirmed": true,
+      "aliases": [
+        "фон",
+        "backdrop",
+        "подложка"
+      ],
+      "tags": [
+        "фон",
+        "подложка",
+        "схема"
+      ],
+      "sourceIllustrationId": "L-backdrop-peach",
+      "figmaNodeId": "21:25399",
+      "size": "L",
+      "role": "backdrop",
+      "svgPath": "/assets/illustrations/L/backdrop/backdrop-peach.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1000,
+        "height": 1000
+      },
+      "intrinsicSize": {
+        "width": 1000,
+        "height": 1000
+      },
+      "schemes": [
+        "peach"
+      ],
+      "repaint": "none",
+      "sourceNodeCount": 4
+    },
+    {
+      "id": "L-backdrop-backdrop-mint",
+      "name": "Фон мятный",
+      "nameConfirmed": true,
+      "aliases": [
+        "фон",
+        "backdrop",
+        "подложка"
+      ],
+      "tags": [
+        "фон",
+        "подложка",
+        "схема"
+      ],
+      "sourceIllustrationId": "L-backdrop-mint",
+      "figmaNodeId": "21:29593",
+      "size": "L",
+      "role": "backdrop",
+      "svgPath": "/assets/illustrations/L/backdrop/backdrop-mint.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 1000,
+        "height": 1000
+      },
+      "intrinsicSize": {
+        "width": 1000,
+        "height": 1000
+      },
+      "schemes": [
+        "mint"
+      ],
+      "repaint": "none",
+      "sourceNodeCount": 65
+    },
+    {
+      "id": "S-backdrop-backdrop-violet",
+      "name": "Фон фиолетовый",
+      "nameConfirmed": true,
+      "aliases": [
+        "фон",
+        "backdrop",
+        "подложка"
+      ],
+      "tags": [
+        "фон",
+        "подложка",
+        "схема"
+      ],
+      "sourceIllustrationId": "S-backdrop-violet",
+      "figmaNodeId": "24:5990",
+      "size": "S",
+      "role": "backdrop",
+      "svgPath": "/assets/illustrations/S/backdrop/backdrop-violet.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 500,
+        "height": 500
+      },
+      "intrinsicSize": {
+        "width": 500,
+        "height": 500
+      },
+      "schemes": [
+        "violet"
+      ],
+      "repaint": "none",
+      "sourceNodeCount": 65
+    },
+    {
+      "id": "S-backdrop-backdrop-peach",
+      "name": "Фон персиковый",
+      "nameConfirmed": true,
+      "aliases": [
+        "фон",
+        "backdrop",
+        "подложка"
+      ],
+      "tags": [
+        "фон",
+        "подложка",
+        "схема"
+      ],
+      "sourceIllustrationId": "S-backdrop-peach",
+      "figmaNodeId": "24:6120",
+      "size": "S",
+      "role": "backdrop",
+      "svgPath": "/assets/illustrations/S/backdrop/backdrop-peach.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 500,
+        "height": 500
+      },
+      "intrinsicSize": {
+        "width": 500,
+        "height": 500
+      },
+      "schemes": [
+        "peach"
+      ],
+      "repaint": "none",
+      "sourceNodeCount": 4
+    },
+    {
+      "id": "S-backdrop-backdrop-mint",
+      "name": "Фон мятный",
+      "nameConfirmed": true,
+      "aliases": [
+        "фон",
+        "backdrop",
+        "подложка"
+      ],
+      "tags": [
+        "фон",
+        "подложка",
+        "схема"
+      ],
+      "sourceIllustrationId": "S-backdrop-mint",
+      "figmaNodeId": "24:6055",
+      "size": "S",
+      "role": "backdrop",
+      "svgPath": "/assets/illustrations/S/backdrop/backdrop-mint.svg",
+      "viewBox": {
+        "x": 0,
+        "y": 0,
+        "width": 500,
+        "height": 500
+      },
+      "intrinsicSize": {
+        "width": 500,
+        "height": 500
+      },
+      "schemes": [
+        "mint"
+      ],
+      "repaint": "none",
+      "sourceNodeCount": 65
+    }
+  ]
+}

@@ -31,3 +31,16 @@ test("все форматы имеют положительные размеры
     assert.ok(format.width > 0 && format.height > 0);
   }
 });
+
+test("обязательные форматы задания 1:1, 4:5, 16:9 присутствуют с верными пропорциями", () => {
+  const required: Array<[string, number]> = [
+    ["1:1", 1],
+    ["4:5", 4 / 5],
+    ["16:9", 16 / 9],
+  ];
+  for (const [id, ratio] of required) {
+    const format = findCanvasFormat(id as never);
+    assert.ok(format, `формат ${id} должен быть доступен`);
+    assert.ok(Math.abs(format!.width / format!.height - ratio) < 1e-9, `пропорция ${id} неверна`);
+  }
+});

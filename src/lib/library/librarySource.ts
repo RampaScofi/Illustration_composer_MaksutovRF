@@ -16,6 +16,7 @@ export const COLOR_SCHEMES_PATH = "/assets/palettes/schemes.json";
 
 export const EMPTY_MANIFEST: LibraryManifest = {
   version: "0",
+  schemes: [],
   components: [],
 };
 
