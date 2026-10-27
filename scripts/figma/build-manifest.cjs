@@ -45,6 +45,10 @@ const ALIASES = {
   pen: ["ручка", "перо", "pen", "писание"],
   folder: ["папка", "folder", "каталог"],
   coin: ["монета", "монеты", "coin", "финансы", "оплата"],
+  "group-344": ["ваза", "цветы", "букет", "букет в вазе", "растение", "vase", "flowers"],
+  "group-345": ["ваза", "цветы", "букет", "букет в вазе", "растение", "vase", "flowers"],
+  "group-346": ["ваза", "цветы", "букет", "букет в вазе", "растение", "vase", "flowers"],
+  "group-347": ["ваза", "цветы", "букет", "букет в вазе", "растение", "vase", "flowers"],
   "backdrop-violet": ["фон", "backdrop", "подложка"],
   "backdrop-peach": ["фон", "backdrop", "подложка"],
   "backdrop-mint": ["фон", "backdrop", "подложка"],
@@ -60,9 +64,25 @@ const TAGS = {
   pen: ["письмо", "документ", "создание", "редактирование", "идея"],
   folder: ["документы", "хранение", "порядок", "архив", "работа"],
   coin: ["деньги", "финансы", "оплата", "стоимость", "бонус"],
+  "group-344": ["природа", "растение", "декор", "подарок", "уют", "вдохновение"],
+  "group-345": ["природа", "растение", "декор", "подарок", "уют", "вдохновение"],
+  "group-346": ["природа", "растение", "декор", "подарок", "уют", "вдохновение"],
+  "group-347": ["природа", "растение", "декор", "подарок", "уют", "вдохновение"],
   "backdrop-violet": ["фон", "подложка", "схема"],
   "backdrop-peach": ["фон", "подложка", "схема"],
   "backdrop-mint": ["фон", "подложка", "схема"],
+};
+
+/**
+ * Подтверждённые имена объектов, которые в исходнике назывались технически
+ * («Group 21…»). Название задаётся здесь, чтобы пересборка манифеста
+ * не возвращала «?».
+ */
+const NAME_OVERRIDES = {
+  "group-344": "Ваза с цветами",
+  "group-345": "Ваза с цветами",
+  "group-346": "Ваза с цветами",
+  "group-347": "Ваза с цветами",
 };
 
 function countNodes(id) {
@@ -78,10 +98,11 @@ function countNodes(id) {
 const components = exported
   .map((e) => {
     const [vbX, vbY, vbW, vbH] = e.viewBox.split(/[\s,]+/).map(Number);
-    const nameConfirmed = !/^Group 21/.test(e.name);
+    const override = NAME_OVERRIDES[e.slug];
+    const nameConfirmed = Boolean(override) || !/^Group 21/.test(e.name);
     return {
       id: `${e.size}-${e.role}-${e.slug}`,
-      name: e.name,
+      name: override || e.name,
       nameConfirmed,
       aliases: nameConfirmed ? ALIASES[e.slug] || [] : [],
       tags: nameConfirmed ? TAGS[e.slug] || [] : [],

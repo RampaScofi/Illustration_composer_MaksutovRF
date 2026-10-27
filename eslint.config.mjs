@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Одноразовые Node-утилиты экспорта (CJS), не код приложения:
     "scripts/**",
+    // Временные данные и вспомогательные скрипты аудита Figma:
+    "figma_tmp/**",
   ]),
 ]);
 
