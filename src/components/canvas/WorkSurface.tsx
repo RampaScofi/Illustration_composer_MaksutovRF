@@ -4,6 +4,7 @@ import { useRef, useCallback, useEffect, useState } from "react";
 import type { CompositionElement } from "@/types/composition";
 import type { Size } from "@/types/geometry";
 import type { LibraryComponent } from "@/types/library";
+import { fitCanvas } from "@/lib/composition/canvas";
 
 type Props = {
   canvasSize: Size;
@@ -16,6 +17,8 @@ type Props = {
   onResize: (id: string, w: number, h: number) => void;
   onRotate: (id: string, deg: number) => void;
   background: string;
+  /** Компонент-подложка из библиотеки Figma (role: backdrop). */
+  backdropId?: string | null;
 };
 
 type DragState = {
@@ -70,10 +73,33 @@ export function WorkSurface({
   onResize,
   onRotate,
   background,
+  backdropId = null,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewport, setViewport] = useState<Size | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const dragRef = useRef<DragState | null>(null);
+
+  // Видимая область холста масштабируется как object-fit: contain —
+  // пропорции формата сохраняются, растягивания по одной оси нет.
+  useEffect(() => {
+    const node = viewportRef.current;
+    if (!node) return;
+
+    const update = () => {
+      setViewport({ width: node.clientWidth, height: node.clientHeight });
+    };
+    update();
+
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const fitted = viewport ? fitCanvas(viewport, canvasSize) : null;
+  const displayWidth = fitted && fitted.width > 0 ? fitted.width : undefined;
+  const displayHeight = fitted && fitted.height > 0 ? fitted.height : undefined;
 
   const toSvg = useCallback(
     (clientX: number, clientY: number) => {
@@ -162,6 +188,15 @@ export function WorkSurface({
   const visible = [...elements].filter((e) => e.visible).sort((a, b) => a.z - b.z);
   const selected = elements.find((e) => e.instanceId === selectedId);
 
+  // Декоративная подложка: SVG из библиотеки Figma, вписанный по принципу
+  // cover (slice) — рисунок заполняет холст любого формата без растяжения.
+  const backdropComponent = backdropId ? components.get(backdropId) : null;
+  const backdropRaw = backdropId ? svgContents.get(backdropId) : null;
+  const backdropInner =
+    backdropComponent && backdropRaw
+      ? applyIdPrefix(extractInner(backdropRaw), "backdrop")
+      : "";
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-zinc-100">
       <div className="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-2 text-xs text-zinc-500">
@@ -169,14 +204,46 @@ export function WorkSurface({
         <span>Элементов: {elements.length}</span>
       </div>
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden p-4 sm:p-6">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
-          preserveAspectRatio="xMidYMid meet"
-          className="h-auto max-h-full w-full max-w-full rounded shadow ring-1 ring-zinc-300"
-          style={{ aspectRatio: `${canvasSize.width} / ${canvasSize.height}`, background }}
-          onMouseDown={() => onSelect(null)}
+        <div
+          ref={viewportRef}
+          className="flex h-full w-full items-center justify-center"
         >
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
+            preserveAspectRatio="xMidYMid meet"
+            width={displayWidth}
+            height={displayHeight}
+            className="block rounded shadow ring-1 ring-zinc-300"
+            style={{
+              width: displayWidth,
+              height: displayHeight,
+              maxWidth: "100%",
+              maxHeight: "100%",
+            }}
+            onMouseDown={() => onSelect(null)}
+          >
+            <rect
+              x={0}
+              y={0}
+              width={canvasSize.width}
+              height={canvasSize.height}
+              fill={background}
+            />
+            {backdropInner && backdropComponent ? (
+              <svg
+                x={0}
+                y={0}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                viewBox={`0 0 ${backdropComponent.intrinsicSize.width} ${backdropComponent.intrinsicSize.height}`}
+                preserveAspectRatio="xMidYMid slice"
+                style={{ pointerEvents: "none" }}
+                aria-hidden
+              >
+                <g dangerouslySetInnerHTML={{ __html: backdropInner }} />
+              </svg>
+            ) : null}
           {visible.map((el) => {
             const comp = components.get(el.componentId);
             const raw = svgContents.get(el.componentId);
@@ -255,7 +322,8 @@ export function WorkSurface({
               Выберите компонент из библиотеки
             </text>
           )}
-        </svg>
+          </svg>
+        </div>
       </div>
     </div>
   );

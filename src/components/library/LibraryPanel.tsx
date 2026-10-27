@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import type { LibraryComponent, ComponentSize } from "@/types/library";
+import { normalizeText } from "@/lib/semantic/normalize";
 import { EmptyState, PanelFrame } from "@/components/panel/PanelFrame";
 
 type Props = {
@@ -21,12 +22,13 @@ export function LibraryPanel({ components, activeSize, onSizeChange, onAddCompon
     let result = components.filter((c) => c.size === activeSize && c.role !== "backdrop");
     if (roleFilter !== "all") result = result.filter((c) => c.role === roleFilter);
     if (query.trim()) {
-      const q = query.toLowerCase();
+      // Нормализация: регистр, «ё» → «е», пунктуация.
+      const q = normalizeText(query);
       result = result.filter(
         (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.aliases.some((a) => a.toLowerCase().includes(q)) ||
-          c.tags.some((t) => t.toLowerCase().includes(q)),
+          normalizeText(c.name).includes(q) ||
+          c.aliases.some((a) => normalizeText(a).includes(q)) ||
+          c.tags.some((t) => normalizeText(t).includes(q)),
       );
     }
     return result;

@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Интерфейс светлый при любой системной теме: тёмная схема ОС
+     не должна красить фон страницы и давать тёмные полосы у краёв. */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -10,13 +13,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
@@ -29,4 +25,5 @@ body {
 html,
 body {
   height: 100%;
+  background-color: #ffffff;
 }

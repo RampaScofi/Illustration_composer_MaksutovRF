@@ -1,64 +1,289 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import type { CanvasFormatId, CompositionElement } from "@/types/composition";
-import type { ComponentSize, LibraryComponent, LibraryManifest } from "@/types/library";
-import { CANVAS_FORMATS, resolveCanvasSize } from "@/lib/composition/canvas";
-import { loadManifest } from "@/lib/library/catalog";
-import { AppHeader } from "@/components/app/AppHeader";
+import type { ComponentSize, LibraryComponent } from "@/types/library";
+import {
+  CANVAS_FORMATS,
+  adaptElementsToCanvas,
+  resolveCanvasSize,
+} from "@/lib/composition/canvas";
+import { buildAutoLayout } from "@/lib/composition/autoLayout";
+import { repaintContents, mappingForComponent } from "@/lib/palette/apply";
+import {
+  CANVAS_BACKGROUNDS,
+  COLOR_SCHEMES,
+  backdropComponentId,
+  backgroundForScheme,
+  canvasColor,
+} from "@/lib/palette/schemes";
+import { explainMatch, matchComponents, selectCompositionPlan } from "@/lib/semantic/matcher";
+import { aiBlockReason } from "@/lib/ai/settings";
+import { DEFAULT_VARIANT_COUNT, buildAiCatalog } from "@/lib/ai/contract";
+import { requestAiVariants } from "@/lib/ai/client";
+import { buildVariantLayout } from "@/lib/ai/variants";
+import type { AiSettings, AiVariantPlan } from "@/lib/ai/types";
+import { ComposePanel, type ComposeStatus } from "@/components/compose/ComposePanel";
 import { LibraryPanel } from "@/components/library/LibraryPanel";
 import { WorkSurface } from "@/components/canvas/WorkSurface";
 import { LayersPanel } from "@/components/layers/LayersPanel";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
 
-const MANIFEST_URL = "/assets/illustrations/manifest.json";
-const CANVAS_BG = "#ffffff";
+/** Данные библиотеки общие для всех проектов; загружает их ProjectShell. */
+export type WorkbenchLibrary = {
+  components: LibraryComponent[];
+  svgContents: Map<string, string>;
+};
 
-export function Workbench() {
-  const [manifest, setManifest] = useState<LibraryManifest | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [svgContents, setSvgContents] = useState<Map<string, string>>(new Map());
+type WorkbenchProps = {
+  projectId: string;
+  library: WorkbenchLibrary;
+  /** Манифест загружен: без этого нельзя ни подбирать, ни добавлять объекты. */
+  ready: boolean;
+  ai: AiSettings;
+  onAiChange: (next: AiSettings) => void;
+  onContentChange: (projectId: string, hasContent: boolean) => void;
+};
+
+/** Примеры запросов из задания: один клик заполняет поле. */
+const PROMPT_EXAMPLES = [
+  "Обучение и саморазвитие",
+  "Идеи превращаются в результат",
+  "Работа и продуктивность",
+  "Творчество и вдохновение",
+  "Знания и развитие",
+  "Технологии и коммуникация",
+] as const;
+
+export function Workbench({
+  projectId,
+  library,
+  ready,
+  ai,
+  onAiChange,
+  onContentChange,
+}: WorkbenchProps) {
+  const { components, svgContents } = library;
   const [activeSize, setActiveSize] = useState<ComponentSize>("L");
   const [activeFormat, setActiveFormat] = useState<CanvasFormatId>("16:9");
+  const [activeScheme, setActiveScheme] = useState<string>(COLOR_SCHEMES[0].id);
+  const [activeBackground, setActiveBackground] = useState<string>(CANVAS_BACKGROUNDS[0].id);
+  const [prompt, setPrompt] = useState("");
+  const [composeStatus, setComposeStatus] = useState<ComposeStatus>({ kind: "idle" });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [elements, setElements] = useState<CompositionElement[]>([]);
+  // Проверенные варианты ИИ: переключение не требует нового запроса, раскладка пересчитывается.
+  const [variantPlans, setVariantPlans] = useState<AiVariantPlan[]>([]);
 
   const nextIdRef = useRef(1);
+  // Номер последнего запроса к ИИ: ответ устаревшего запроса отбрасывается.
+  const requestSeqRef = useRef(0);
 
   useEffect(() => {
-    loadManifest(MANIFEST_URL)
-      .then((m) => setManifest(m))
-      .catch((e: Error) => setLoadError(e.message));
-  }, []);
+    onContentChange(projectId, elements.length > 0);
+  }, [projectId, elements.length, onContentChange]);
 
-  useEffect(() => {
-    if (!manifest) return;
-    const paths = manifest.components.map((c) => [c.id, c.svgPath] as const);
-    let cancelled = false;
-    Promise.all(
-      paths.map(async ([id, path]) => {
-        try {
-          const res = await fetch(path);
-          return [id, res.ok ? await res.text() : ""] as [string, string];
-        } catch {
-          return [id, ""] as [string, string];
-        }
-      }),
-    ).then((entries) => {
-      if (!cancelled) setSvgContents(new Map(entries.filter(([, svg]) => svg)));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [manifest]);
-
-  const components = useMemo(() => manifest?.components ?? [], [manifest]);
   const componentMap = useMemo(
     () => new Map<string, LibraryComponent>(components.map((c) => [c.id, c])),
     [components],
   );
 
   const canvasSize = useMemo(() => resolveCanvasSize(activeFormat), [activeFormat]);
+
+  // Перекрашенная разметка: одна и та же для холста и экспорта.
+  const displayContents = useMemo(
+    () => repaintContents(svgContents, componentMap, activeScheme),
+    [svgContents, componentMap, activeScheme],
+  );
+
+  const backgroundColor = useMemo(() => canvasColor(activeBackground), [activeBackground]);
+
+  // Декоративная подложка из библиотеки Figma для выбранного фона и набора.
+  const backdropId = useMemo(() => {
+    const preferred = backdropComponentId(activeBackground, activeSize);
+    if (componentMap.has(preferred)) return preferred;
+    const fallback = backdropComponentId(activeBackground, "L");
+    return componentMap.has(fallback) ? fallback : null;
+  }, [activeBackground, activeSize, componentMap]);
+
+  /** Смена формата: холст меняется, объекты остаются в границах и не деформируются. */
+  const selectFormat = useCallback((format: CanvasFormatId) => {
+    setActiveFormat((prev) => {
+      if (prev === format) return prev;
+      const nextSize = resolveCanvasSize(format);
+      setElements((current) => adaptElementsToCanvas(current, nextSize));
+      return format;
+    });
+  }, []);
+
+  /** Схема задаёт и цвета объектов, и связанный фон из исходной спецификации. */
+  const selectScheme = useCallback((schemeId: string) => {
+    setActiveScheme(schemeId);
+    setActiveBackground(backgroundForScheme(schemeId).id);
+  }, []);
+
+  /** Заменяет композицию. Временные id автолейаута (i1, i2…) переназначаются, чтобы не совпасть с добавленными вручную. */
+  const applyLayout = useCallback((layout: CompositionElement[]) => {
+    setElements(layout.map((e) => ({ ...e, instanceId: `i${nextIdRef.current++}` })));
+    setSelectedId(null);
+  }, []);
+
+  /** Локальный подбор без ИИ. notice объясняет, почему использован именно он. */
+  const composeLocal = useCallback(
+    (query: string, notice?: string) => {
+      setVariantPlans([]);
+      const result = matchComponents(query, components);
+      const plan = selectCompositionPlan(result, { size: activeSize });
+
+      if (!result.hasMatches || plan.items.length === 0) {
+        setComposeStatus({
+          kind: "empty",
+          message:
+            "Подходящих объектов в библиотеке не нашлось. Попробуйте другую формулировку — например, «обучение», «идеи», «работа», «технологии».",
+        });
+        return;
+      }
+
+      const layout = buildAutoLayout(
+        plan.items.map((item) => ({
+          componentId: item.component.id,
+          role: item.component.role,
+          intrinsic: item.component.intrinsicSize,
+          category: item.component.sourceIllustrationId,
+        })),
+        { canvas: canvasSize },
+      );
+
+      if (layout.length === 0) {
+        setComposeStatus({
+          kind: "error",
+          message: "Не удалось разместить объекты на холсте этого формата.",
+        });
+        return;
+      }
+
+      applyLayout(layout);
+      setComposeStatus({
+        kind: "ok",
+        message: `Собрана композиция из ${layout.length} объектов:`,
+        items: plan.items.map((item) => ({
+          name:
+            item.component.role === "background"
+              ? `${item.component.name} — подложка`
+              : item.component.name,
+          reason: explainMatch(item),
+        })),
+        notice,
+      });
+    },
+    [components, activeSize, canvasSize, applyLayout],
+  );
+
+  /**
+   * ИИ-подбор: модель выбирает id, раскладку считает приложение.
+   * Любой сбой или пустой результат уводит на локальный подбор с объяснением.
+   */
+  const composeWithAi = useCallback(
+    async (query: string) => {
+      const seq = ++requestSeqRef.current;
+      setComposeStatus({ kind: "loading", message: "Запрашиваю варианты у нейросети…" });
+
+      const result = await requestAiVariants({
+        prompt: query,
+        size: activeSize,
+        variantCount: DEFAULT_VARIANT_COUNT,
+        catalog: buildAiCatalog(components, activeSize),
+        provider: {
+          id: ai.providerId,
+          model: ai.model,
+          baseUrl: ai.baseUrl,
+          apiKey: ai.apiKey,
+        },
+      });
+
+      // Пока шёл запрос, пользователь мог отправить новый — старый ответ не нужен.
+      if (seq !== requestSeqRef.current) return;
+
+      if (!result.ok) {
+        composeLocal(query, `Нейросеть недоступна (${result.error}). Выполнен локальный подбор.`);
+        return;
+      }
+
+      const accepted = result.variants.filter(
+        (plan) => buildVariantLayout(plan, componentMap, canvasSize) !== null,
+      );
+      if (accepted.length === 0) {
+        composeLocal(query, "Нейросеть не предложила подходящих вариантов. Выполнен локальный подбор.");
+        return;
+      }
+
+      const first = buildVariantLayout(accepted[0], componentMap, canvasSize);
+      if (!first) {
+        composeLocal(query, "Нейросеть не предложила подходящих вариантов. Выполнен локальный подбор.");
+        return;
+      }
+
+      setVariantPlans(accepted);
+      applyLayout(first.elements);
+      setComposeStatus({
+        kind: "ok",
+        message: `${first.title}. ${first.reason}`,
+        items: first.names.map((name) => ({ name, reason: "" })),
+        variants: accepted.map((plan) => plan.title),
+        activeVariant: 0,
+      });
+    },
+    [components, activeSize, ai, componentMap, canvasSize, applyLayout, composeLocal],
+  );
+
+  const compose = useCallback(() => {
+    const query = prompt.trim();
+    if (!query) {
+      setComposeStatus({ kind: "empty", message: "Введите описание иллюстрации." });
+      return;
+    }
+
+    if (!ai.enabled) {
+      composeLocal(query);
+      return;
+    }
+
+    const blockReason = aiBlockReason(ai);
+    if (blockReason !== null) {
+      composeLocal(query, `ИИ не использован: ${blockReason}. Выполнен локальный подбор.`);
+      return;
+    }
+
+    void composeWithAi(query);
+  }, [prompt, ai, composeLocal, composeWithAi]);
+
+  /** Переключение варианта ИИ. Раскладка пересчитывается под текущий холст. */
+  const selectVariant = useCallback(
+    (index: number) => {
+      const plan = variantPlans[index];
+      if (!plan) return;
+      const layout = buildVariantLayout(plan, componentMap, canvasSize);
+      if (!layout) {
+        setComposeStatus({
+          kind: "error",
+          message: "Этот вариант нельзя разместить на текущем холсте.",
+        });
+        return;
+      }
+      applyLayout(layout.elements);
+      setComposeStatus((prev) =>
+        prev.kind === "ok"
+          ? {
+              ...prev,
+              message: `${layout.title}. ${layout.reason}`,
+              items: layout.names.map((name) => ({ name, reason: "" })),
+              activeVariant: index,
+            }
+          : prev,
+      );
+    },
+    [variantPlans, componentMap, canvasSize, applyLayout],
+  );
 
   const addComponent = useCallback(
     (componentId: string) => {
@@ -171,12 +396,20 @@ export function Workbench() {
         title: "Экспорт",
         format: activeFormat,
         componentSize: activeSize,
-        colorSchemeId: null,
+        colorSchemeId: activeScheme,
         elements,
       },
       componentMap,
-      svgContents,
+      displayContents,
       canvasSize,
+      {
+        background: backgroundColor,
+        backdropId,
+        repaint: (componentId) => {
+          const component = componentMap.get(componentId);
+          return component ? mappingForComponent(component, activeScheme) : {};
+        },
+      },
     );
     const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -187,21 +420,38 @@ export function Workbench() {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-  }, [activeFormat, activeSize, elements, componentMap, svgContents, canvasSize]);
+  }, [
+    activeFormat,
+    activeSize,
+    activeScheme,
+    elements,
+    componentMap,
+    displayContents,
+    canvasSize,
+    backgroundColor,
+    backdropId,
+  ]);
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      <AppHeader stageLabel="Этап 2 — редактор" />
-
-      {loadError ? (
-        <div className="m-4 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          Не удалось загрузить манифест библиотеки: {loadError}
-        </div>
-      ) : null}
+    <>
+      <ComposePanel
+        value={prompt}
+        onChange={setPrompt}
+        onSubmit={compose}
+        examples={PROMPT_EXAMPLES}
+        status={composeStatus}
+        disabled={!ready || components.length === 0}
+        ai={{
+          enabled: ai.enabled,
+          blockReason: aiBlockReason(ai),
+          onToggle: () => onAiChange({ ...ai, enabled: !ai.enabled }),
+        }}
+        onSelectVariant={selectVariant}
+      />
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
         <div className="order-2 flex min-h-0 flex-col border-t border-zinc-200 lg:order-none lg:border-t-0">
-          {manifest ? (
+          {ready ? (
             <LibraryPanel
               components={components}
               activeSize={activeSize}
@@ -218,13 +468,14 @@ export function Workbench() {
             canvasSize={canvasSize}
             elements={elements}
             components={componentMap}
-            svgContents={svgContents}
+            svgContents={displayContents}
             selectedId={selectedId}
             onSelect={setSelectedId}
             onMove={moveElement}
             onResize={resizeElement}
             onRotate={rotateElement}
-            background={CANVAS_BG}
+            background={backgroundColor}
+            backdropId={backdropId}
           />
         </main>
 
@@ -233,8 +484,13 @@ export function Workbench() {
             formats={CANVAS_FORMATS}
             activeFormat={activeFormat}
             activeSize={activeSize}
-            schemeCount={manifest?.schemes.length ?? 0}
-            onSelectFormat={setActiveFormat}
+            schemes={COLOR_SCHEMES}
+            activeScheme={activeScheme}
+            backgrounds={CANVAS_BACKGROUNDS}
+            activeBackground={activeBackground}
+            onSelectFormat={selectFormat}
+            onSelectScheme={selectScheme}
+            onSelectBackground={setActiveBackground}
           />
           <div className="min-h-0 flex-1 border-t border-zinc-200">
             <LayersPanel
@@ -263,6 +519,6 @@ export function Workbench() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

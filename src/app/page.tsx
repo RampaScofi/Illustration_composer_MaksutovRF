@@ -1,5 +1,5 @@
-import { Workbench } from "@/components/app/Workbench";
+import { ProjectShell } from "@/components/app/ProjectShell";
 
 export default function Home() {
-  return <Workbench />;
+  return <ProjectShell />;
 }
