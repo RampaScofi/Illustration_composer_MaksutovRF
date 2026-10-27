@@ -1,4 +1,5 @@
 import type { LibraryComponent, LibraryManifest } from "@/types/library";
+import { normalizeText } from "../semantic/normalize.ts";
 
 /**
  * Каталог компонентов библиотеки.
@@ -44,27 +45,29 @@ export class ComponentCatalog {
   search(query: string): LibraryComponent[] {
     if (!query.trim()) return this.components;
 
-    const q = query.trim().toLowerCase();
+    const q = normalizeText(query);
+    if (!q) return this.components;
+
     const results = new Set<LibraryComponent>();
     const scores = new Map<string, number>();
 
     for (const comp of this.components) {
       // 1. Название (приоритет 3)
-      const nameMatch = comp.name.toLowerCase().includes(q);
+      const nameMatch = normalizeText(comp.name).includes(q);
       if (nameMatch) {
         results.add(comp);
         scores.set(comp.id, (scores.get(comp.id) ?? 0) + 3);
       }
 
       // 2. Синонимы (приоритет 2)
-      const aliasMatch = comp.aliases.some((a) => a.toLowerCase().includes(q));
+      const aliasMatch = comp.aliases.some((a) => normalizeText(a).includes(q));
       if (aliasMatch) {
         results.add(comp);
         scores.set(comp.id, (scores.get(comp.id) ?? 0) + 2);
       }
 
       // 3. Теги (приоритет 1)
-      const tagMatch = comp.tags.some((t) => t.toLowerCase().includes(q));
+      const tagMatch = comp.tags.some((t) => normalizeText(t).includes(q));
       if (tagMatch) {
         results.add(comp);
         scores.set(comp.id, (scores.get(comp.id) ?? 0) + 1);

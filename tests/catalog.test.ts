@@ -197,7 +197,7 @@ test("экспорт формирует корректный SVG-докумен�
     new Map([["c1", comp]]),
     new Map([["c1", loadFixture("sample-plain.svg")]]),
     { width: 1200, height: 1200 },
-    true,
+    { debug: true },
   );
 
   assert.ok(svg.startsWith("<?xml"));
@@ -227,7 +227,7 @@ test("экспорт сохраняет порядок слоёв (z) в вых�
     new Map([["a", a], ["b", b]]),
     new Map([["a", loadFixture("sample-plain.svg")], ["b", loadFixture("sample-plain.svg")]]),
     { width: 1920, height: 1080 },
-    true,
+    { debug: true },
   );
 
   const bottomIdx = svg.indexOf('data-instance-id="bottom"');
