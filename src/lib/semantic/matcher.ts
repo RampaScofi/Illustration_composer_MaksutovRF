@@ -1,4 +1,5 @@
 import type { ComponentRole, ComponentSize, LibraryComponent } from "@/types/library";
+import { conflicts } from "../library/layoutMetadata.ts";
 import { findConcepts } from "./associations.ts";
 import { normalizeText, stemWord, tokenize } from "./normalize.ts";
 
@@ -164,12 +165,14 @@ export function selectCompositionPlan(
   const usedCategories = new Set<string>();
 
   for (const candidate of relevant) {
-    if (candidate.component.role !== "primary") continue;
+    const { component } = candidate;
+    if (component.role !== "primary") continue;
     if (candidate.score < cutoff) break;
-    // Разнообразие: один объект каждой категории.
-    if (usedCategories.has(candidate.component.sourceIllustrationId)) continue;
+    // Разнообразие: один объект каждой категории, если повтор не разрешён.
+    if (!component.allowDuplicate && usedCategories.has(component.sourceIllustrationId)) continue;
+    if (primary.some((p) => conflicts(p.component, component))) continue;
 
-    usedCategories.add(candidate.component.sourceIllustrationId);
+    usedCategories.add(component.sourceIllustrationId);
     primary.push(candidate);
     if (primary.length >= maxPrimary) break;
   }
@@ -180,15 +183,18 @@ export function selectCompositionPlan(
 
   const main = primary[0];
 
-  // Фон берём из той же категории, что и главный объект: это готовая
-  // монохромная подложка того же смыслового ряда.
-  const sameCategory = relevant.find(
-    (c) =>
-      c.component.role === "background" &&
-      c.component.sourceIllustrationId === main.component.sourceIllustrationId,
-  );
-  const anyBackground = relevant.find((c) => c.component.role === "background");
-  const background = sameCategory ?? anyBackground ?? null;
+  // Фон не должен повторять категорию переднего плана: иначе тот же предмет
+  // окажется и основным, и подложкой. Исключение — allowDuplicate у фона.
+  const primaryCategories = new Set(primary.map((p) => p.component.sourceIllustrationId));
+  const background =
+    relevant.find((c) => {
+      const { component } = c;
+      if (component.role !== "background") return false;
+      if (!component.allowDuplicate && primaryCategories.has(component.sourceIllustrationId)) {
+        return false;
+      }
+      return !primary.some((p) => conflicts(p.component, component));
+    }) ?? null;
 
   const items = [...primary];
   if (background) items.push(background);

@@ -34,6 +34,7 @@ const LIBRARY: LibraryComponent[] = [
   makeComponent({ id: "L-background-book", name: "Книга", role: "background", repaint: "monochrome-only", sourceIllustrationId: "L-book" }),
   makeComponent({ id: "L-primary-puzzle", name: "Пазлы", tags: ["обучение", "развитие", "задача"], sourceIllustrationId: "L-puzzle" }),
   makeComponent({ id: "L-primary-lamp", name: "Лампа", aliases: ["торшер"], tags: ["идея", "вдохновение", "работа"], sourceIllustrationId: "L-lamp" }),
+  makeComponent({ id: "L-background-lamp", name: "Лампа", role: "background", repaint: "monochrome-only", tags: ["обучение", "знание"], sourceIllustrationId: "L-lamp" }),
   makeComponent({ id: "L-primary-phone", name: "Телефон", aliases: ["смартфон"], tags: ["технологии", "коммуникация"], sourceIllustrationId: "L-phone" }),
   makeComponent({ id: "L-primary-wallet", name: "Кошелек", aliases: ["кошелек", "бумажник"], tags: ["деньги", "финансы"], sourceIllustrationId: "L-wallet" }),
   makeComponent({
@@ -107,7 +108,7 @@ test("подбор возвращает только существующие к
   }
 });
 
-test("план композиции: главный объект, взаимодополняющие, фон той же категории", () => {
+test("план композиции: главный объект, взаимодополняющие, фон другой категории", () => {
   const result = matchComponents("обучение и знания", LIBRARY);
   const plan = selectCompositionPlan(result, { size: "L" });
 
@@ -115,7 +116,11 @@ test("план композиции: главный объект, взаимод
   assert.ok(plan.primary.length >= 1);
   assert.ok(plan.primary.length <= MAX_PRIMARY_OBJECTS);
   assert.ok(plan.background);
-  assert.equal(plan.background!.component.sourceIllustrationId, plan.main!.component.sourceIllustrationId);
+  // Фоновый вариант не должен быть тем же предметом, что объект переднего
+  // плана: иначе одна и та же иллюстрация оказывается и главным объектом, и
+  // подложкой, и подложка перетягивает на себя всю сцену.
+  const primaryCategories = new Set(plan.primary.map((p) => p.component.sourceIllustrationId));
+  assert.ok(!primaryCategories.has(plan.background!.component.sourceIllustrationId));
   // Дубликатов категорий нет.
   const categories = plan.primary.map((p) => p.component.sourceIllustrationId);
   assert.equal(new Set(categories).size, categories.length);

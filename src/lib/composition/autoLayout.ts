@@ -1,9 +1,35 @@
-import type { Box, Size } from "@/types/geometry";
-import type { CompositionElement } from "@/types/composition";
-import type { ComponentRole } from "@/types/library";
+import type { Box, Size } from "../../types/geometry.ts";
+import type { CompositionElement } from "../../types/composition.ts";
+import type { ComponentRole } from "../../types/library.ts";
+import {
+  areaOf,
+  bottomOf,
+  between,
+  clamp,
+  createRandom,
+  fitInto,
+  horizontalShiftRange,
+  jitter,
+  keepMostlyInside,
+  overlapArea,
+  pieceFrom,
+  scaleAround,
+  scaleOf,
+  shiftBy,
+  unionBoxes,
+  type Piece,
+  type SizedItem,
+} from "./pieces.ts";
+import { applyRotations } from "./rotationPolicy.ts";
+import { choosePreset, type LayoutPreset } from "./templates.ts";
+import { isBetterScore, scoreLayout, type Score } from "./scorer.ts";
+import { SOFT_OVERLAP_LIMIT } from "./collision.ts";
+
+export { MAX_CROP, createRandom, fitInto, safeBox, boxesOverlap } from "./pieces.ts";
+export { choosePreset, type LayoutPreset } from "./templates.ts";
 
 /**
- * Автоматическая компоновка сцены.
+ * Geometry Engine: автоматическая компоновка сцены.
  *
  * Модель сцены — «стол»: объекты стоят на общей линии (базовой линии). Главный
  * объект крупный и почти по центру, вспомогательные стоят рядом с ним и друг с
@@ -11,17 +37,18 @@ import type { ComponentRole } from "@/types/library";
  * друг на друга вертикально и не разлетаются по холсту.
  *
  * Пропорции исходных SVG сохраняются, сами объекты не меняются: меняются
- * только позиция, размер экземпляра и порядок слоёв. Порядок слоёв — по глубине:
- * объект, нижний край которого ниже, ближе к зрителю и рисуется выше.
+ * позиция, размер экземпляра, поворот (через трансформацию экземпляра) и порядок
+ * слоёв. Порядок слоёв — по глубине: объект, нижний край которого ниже, ближе к
+ * зрителю и рисуется выше.
  *
- * Одинаковое зерно даёт одинаковую раскладку, без зерна каждый вызов даёт новую.
+ * Пресет выбирает Layout Templates Engine, допустимость перекрытий проверяет
+ * Collision Validator, поворот — Rotation Policy Engine, выбор лучшего варианта —
+ * Composition Scorer. Одинаковое зерно даёт одинаковую раскладку, без зерна
+ * каждый вызов даёт новую.
  */
 
-export type LayoutItem = {
-  componentId: string;
+export type LayoutItem = SizedItem & {
   role: ComponentRole;
-  /** Исходный размер SVG (viewBox). */
-  intrinsic: Size;
   /** Идентификатор категории: объекты одной категории не дублируются. */
   category: string;
 };
@@ -35,169 +62,394 @@ export type AutoLayoutOptions = {
   seed?: number;
 };
 
+type Candidate = { pieces: Piece[]; layers: Piece[] };
+
 /** Линия стола: доля высоты холста, на которой стоят нижние края объектов. */
 const BASELINE: readonly [number, number] = [0.7, 0.86];
-/** Главный объект: доля ширины холста. */
-const MAIN_WIDTH: readonly [number, number] = [0.5, 0.72];
+/**
+ * Главный объект: доля ширины холста.
+ * Верхняя граница выбрана так, чтобы предмет с пропорциями, близкими к
+ * пропорциям холста, не заполнял собой всю сцену: при in-box fit лимитирующей
+ * становится высота, и завышенная квота превращает объект в «огромный контур».
+ */
+const MAIN_WIDTH: readonly [number, number] = [0.44, 0.62];
 /** Главный объект: доля высоты холста. */
-const MAIN_HEIGHT: readonly [number, number] = [0.5, 0.72];
-/** Вспомогательный объект: доля высоты главного. */
-const SECONDARY_HEIGHT: readonly [number, number] = [0.35, 0.6];
+const MAIN_HEIGHT: readonly [number, number] = [0.44, 0.6];
+/** Вспомогательный объект: доля высоты главного. Заметно меньше, чтобы читалась иерархия. */
+const SECONDARY_HEIGHT: readonly [number, number] = [0.32, 0.5];
 /** Вспомогательный объект: доля ширины главного. */
-const SECONDARY_WIDTH = 0.7;
+const SECONDARY_WIDTH = 0.58;
 /**
  * Заход соседа на предыдущий объект, доля ширины соседа.
  * Отрицательное значение — небольшой зазор, положительное — перекрытие.
+ * Верхняя граница ограничена: заход не должен скрывать существенную часть
+ * соседнего предмета.
  */
-const SECONDARY_OVERLAP: readonly [number, number] = [-0.06, 0.14];
+const SECONDARY_OVERLAP: readonly [number, number] = [-0.05, 0.07];
 /** Разброс нижних краёв вспомогательных объектов относительно линии стола, доля высоты холста. */
 const LINE_JITTER = 0.012;
 /** Вероятность, что группа обрезается краем холста. */
 const CROP_CHANCE = 0.25;
 /** Доля ширины группы, которая выходит за край холста при обрезке. */
 const CROP_RANGE: readonly [number, number] = [0.08, 0.25];
-/** Доля размера объекта, которая может выйти за край холста с каждой стороны. */
-export const MAX_CROP = 0.25;
 /** Вероятность появления фоновой копии главного объекта. */
-const COPY_CHANCE = 0.35;
+const COPY_CHANCE = 0.2;
 /** Фоновая копия: доля размера главного объекта. Всегда меньше него. */
 const COPY_FACTOR: readonly [number, number] = [0.5, 0.7];
-/** Сдвиг копии от центра главного, доля его ширины: копия выглядывает сбоку. */
-const COPY_SHIFT: readonly [number, number] = [0.35, 0.5];
+/**
+ * Сдвиг копии от центра главного, доля его ширины.
+ * Больше 0.75 — копия стоит рядом и только касается главного, а не накладывается:
+ * при прежних 0.35–0.5 копированный объект закрывал до 60% площади оригинала.
+ */
+const COPY_SHIFT: readonly [number, number] = [0.78, 1.0];
 /** Подъём копии над линией стола, доля высоты холста: копия дальше от зрителя. */
 const COPY_LIFT: readonly [number, number] = [0.04, 0.1];
-/** Масштаб подложки относительно холста. */
-const BACKGROUND_SCALE: readonly [number, number] = [0.92, 1];
+/**
+ * Масштаб фонового объекта относительно холста.
+ * Фона в библиотеке — это предметные иллюстрации в приглушённой раскраске,
+ * а не декоративные подложки (те вынесены в role "backdrop"). Растягивать
+ * такой предмет на 92–100% холста нельзя: он становится главным по размеру,
+ * перекрывает сцену и ломает иерархию.
+ */
+const BACKGROUND_SCALE: readonly [number, number] = [0.42, 0.6];
+/** Положение фона: доля высоты холста до нижнего края фона — дальний план за линией стола. */
+const BACKGROUND_BOTTOM: readonly [number, number] = [0.5, 0.62];
 /** Доля ширины холста, которую может занимать группа без обрезки. */
 const GROUP_WIDTH_LIMIT = 0.94;
 /** Доля ширины холста, которую может занимать группа при обрезке. */
 const GROUP_WIDTH_LIMIT_CROPPED = 0.8;
 /** Минимальный отступ группы от верхнего края, доля высоты холста. */
 const TOP_MARGIN = 0.03;
+/** Сколько кандидатов раскладки сравнивается. */
+const CANDIDATE_COUNT = 8;
 
-/** Вписывает исходный размер в бокс с сохранением пропорций. */
-export function fitInto(intrinsic: Size, box: Size): Size {
-  if (intrinsic.width <= 0 || intrinsic.height <= 0) {
-    return { width: 0, height: 0 };
-  }
-  const scale = Math.min(box.width / intrinsic.width, box.height / intrinsic.height);
-  return { width: intrinsic.width * scale, height: intrinsic.height * scale };
-}
+/** Параметры стола для пресетов, где объекты стоят в ряд. */
+type TableStyle = {
+  baseline: readonly [number, number];
+  mainWidth: readonly [number, number];
+  mainHeight: readonly [number, number];
+  secondaryHeight: readonly [number, number];
+  secondaryWidth: number;
+  overlap: readonly [number, number];
+};
 
-export function safeBox(canvas: Size, paddingRatio = 0.06): Box {
-  const pad = Math.min(canvas.width, canvas.height) * paddingRatio;
-  return {
-    x: pad,
-    y: pad,
-    width: Math.max(0, canvas.width - pad * 2),
-    height: Math.max(0, canvas.height - pad * 2),
+const HERO_STYLE: TableStyle = {
+  baseline: BASELINE,
+  mainWidth: MAIN_WIDTH,
+  mainHeight: MAIN_HEIGHT,
+  secondaryHeight: SECONDARY_HEIGHT,
+  secondaryWidth: SECONDARY_WIDTH,
+  overlap: SECONDARY_OVERLAP,
+};
+
+const COMPACT_STYLE: TableStyle = {
+  baseline: [0.72, 0.86],
+  mainWidth: [0.38, 0.5],
+  mainHeight: [0.38, 0.52],
+  secondaryHeight: [0.44, 0.62],
+  secondaryWidth: 0.62,
+  overlap: [0.0, 0.08],
+};
+
+const WIDE_STYLE: TableStyle = {
+  baseline: [0.66, 0.8],
+  mainWidth: [0.28, 0.38],
+  mainHeight: [0.46, 0.64],
+  secondaryHeight: [0.5, 0.72],
+  secondaryWidth: 0.62,
+  overlap: [-0.05, 0.05],
+};
+
+/** Вспомогательные объекты ставятся рядом с главным, стороны чередуются. Первый элемент — главный. */
+function arrangeTable(
+  main: LayoutItem,
+  secondaries: readonly LayoutItem[],
+  canvas: Size,
+  style: TableStyle,
+  rand: () => number,
+): Piece[] | null {
+  const mainScale = scaleOf(main.preferredScale);
+  const baseline = canvas.height * between(rand, style.baseline);
+  const mainSize = fitInto(main.intrinsic, {
+    width: canvas.width * between(rand, style.mainWidth) * mainScale,
+    height: Math.min(canvas.height * between(rand, style.mainHeight) * mainScale, baseline),
+  });
+  if (mainSize.width <= 0 || mainSize.height <= 0) return null;
+
+  const mainBox: Box = {
+    x: canvas.width / 2 - mainSize.width / 2 + jitter(rand, canvas.width * 0.05),
+    y: baseline - mainSize.height,
+    width: mainSize.width,
+    height: mainSize.height,
   };
+  const pieces: Piece[] = [pieceFrom(main, mainBox, "main")];
+
+  let side = rand() < 0.5 ? -1 : 1;
+  let left = mainBox.x;
+  let right = mainBox.x + mainBox.width;
+  for (const item of secondaries) {
+    const size = fitInto(item.intrinsic, {
+      width: mainSize.width * style.secondaryWidth * scaleOf(item.preferredScale),
+      height: mainSize.height * between(rand, style.secondaryHeight) * scaleOf(item.preferredScale),
+    });
+    if (size.width <= 0 || size.height <= 0) continue;
+
+    const overlap = between(rand, style.overlap) * size.width;
+    const bottom = baseline + jitter(rand, canvas.height * LINE_JITTER);
+    let x: number;
+    if (side > 0) {
+      x = right - overlap;
+      right = x + size.width;
+    } else {
+      x = left + overlap - size.width;
+      left = x;
+    }
+    pieces.push(
+      pieceFrom(item, { x, y: bottom - size.height, width: size.width, height: size.height }, "secondary"),
+    );
+    side = -side;
+  }
+  return pieces;
 }
 
-export function boxesOverlap(a: Box, b: Box, margin = 0): boolean {
-  return !(
-    a.x + a.width + margin <= b.x ||
-    b.x + b.width + margin <= a.x ||
-    a.y + a.height + margin <= b.y ||
-    b.y + b.height + margin <= a.y
-  );
+/** Диагональ: главный слева или справа сверху, вспомогательные уходят к противоположному нижнему краю. */
+function arrangeDiagonal(
+  main: LayoutItem,
+  secondaries: readonly LayoutItem[],
+  canvas: Size,
+  rand: () => number,
+): Piece[] | null {
+  const width = canvas.width;
+  const height = canvas.height;
+  const mainScale = scaleOf(main.preferredScale);
+  const dir = rand() < 0.5 ? -1 : 1;
+  const mainBottom = height * between(rand, [0.5, 0.62]);
+  const mainSize = fitInto(main.intrinsic, {
+    width: width * between(rand, [0.4, 0.5]) * mainScale,
+    height: Math.min(height * between(rand, [0.42, 0.56]) * mainScale, mainBottom),
+  });
+  if (mainSize.width <= 0 || mainSize.height <= 0) return null;
+
+  const centerX = width / 2 - dir * width * between(rand, [0.12, 0.18]);
+  const pieces: Piece[] = [
+    pieceFrom(
+      main,
+      {
+        x: centerX - mainSize.width / 2,
+        y: mainBottom - mainSize.height,
+        width: mainSize.width,
+        height: mainSize.height,
+      },
+      "main",
+    ),
+  ];
+
+  const stepY = Math.min(height * 0.13, (height * 0.95 - mainBottom) / Math.max(1, secondaries.length));
+  secondaries.forEach((item, index) => {
+    const itemScale = scaleOf(item.preferredScale);
+    const size = fitInto(item.intrinsic, {
+      width: mainSize.width * 0.7 * itemScale,
+      height: mainSize.height * between(rand, [0.5, 0.7]) * itemScale,
+    });
+    if (size.width <= 0 || size.height <= 0) return;
+    const step = index + 1;
+    const center = centerX + dir * mainSize.width * 0.75 * step;
+    const bottom = mainBottom + stepY * step + jitter(rand, height * LINE_JITTER);
+    pieces.push(
+      pieceFrom(
+        item,
+        { x: center - size.width / 2, y: bottom - size.height, width: size.width, height: size.height },
+        "secondary",
+      ),
+    );
+  });
+  return pieces;
 }
 
-type Piece = { componentId: string; box: Box };
+/** Вертикаль: главный в верхней части, вспомогательные чередуются слева и справа под ним. */
+function arrangeTall(
+  main: LayoutItem,
+  secondaries: readonly LayoutItem[],
+  canvas: Size,
+  rand: () => number,
+): Piece[] | null {
+  const width = canvas.width;
+  const height = canvas.height;
+  const mainScale = scaleOf(main.preferredScale);
+  const mainBottom = height * between(rand, [0.56, 0.66]);
+  const mainSize = fitInto(main.intrinsic, {
+    width: width * between(rand, [0.6, 0.78]) * mainScale,
+    height: Math.min(height * between(rand, [0.4, 0.5]) * mainScale, mainBottom),
+  });
+  if (mainSize.width <= 0 || mainSize.height <= 0) return null;
 
-/** Генератор Mulberry32: детерминированная последовательность по зерну. */
-export function createRandom(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  const mainBox: Box = {
+    x: width / 2 - mainSize.width / 2 + jitter(rand, width * 0.04),
+    y: mainBottom - mainSize.height,
+    width: mainSize.width,
+    height: mainSize.height,
   };
+  const pieces: Piece[] = [pieceFrom(main, mainBox, "main")];
+
+  const stepY = secondaries.length > 0
+    ? Math.min(height * 0.2, (height * 0.95 - mainBottom) / secondaries.length)
+    : 0;
+  let side = rand() < 0.5 ? -1 : 1;
+  secondaries.forEach((item, index) => {
+    const itemScale = scaleOf(item.preferredScale);
+    const size = fitInto(item.intrinsic, {
+      width: mainSize.width * 0.6 * itemScale,
+      height: mainSize.height * between(rand, [0.5, 0.7]) * itemScale,
+    });
+    if (size.width <= 0 || size.height <= 0) return;
+    const bottom = mainBottom + stepY * (index + 1) + jitter(rand, height * LINE_JITTER);
+    const overlap = between(rand, [0.05, 0.2]) * size.width;
+    const x = side > 0
+      ? mainBox.x + mainBox.width - overlap
+      : mainBox.x + overlap - size.width;
+    side = -side;
+    pieces.push(
+      pieceFrom(item, { x, y: bottom - size.height, width: size.width, height: size.height }, "secondary"),
+    );
+  });
+  return pieces;
 }
 
-function between(rand: () => number, [min, max]: readonly [number, number]): number {
-  return min + (max - min) * rand();
-}
-
-function jitter(rand: () => number, amplitude: number): number {
-  return (rand() * 2 - 1) * amplitude;
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), Math.max(min, max));
-}
-
-function bottomOf(box: Box): number {
-  return box.y + box.height;
-}
-
-/** Охватывающий прямоугольник группы. */
-function unionOf(pieces: readonly Piece[]): Box {
-  const left = Math.min(...pieces.map((p) => p.box.x));
-  const top = Math.min(...pieces.map((p) => p.box.y));
-  const right = Math.max(...pieces.map((p) => p.box.x + p.box.width));
-  const bottom = Math.max(...pieces.map((p) => bottomOf(p.box)));
-  return { x: left, y: top, width: right - left, height: bottom - top };
-}
-
-/** Масштабирует группу относительно точки (ax, ay), сохраняя взаимное расположение. */
-function scaleAround(pieces: Piece[], k: number, ax: number, ay: number): void {
-  for (const piece of pieces) {
-    const { box } = piece;
-    piece.box = {
-      x: ax + (box.x - ax) * k,
-      y: ay + (box.y - ay) * k,
-      width: box.width * k,
-      height: box.height * k,
-    };
+/** Расставляет объекты выбранным пресетом. Первый элемент результата — главный объект. */
+function arrange(
+  preset: LayoutPreset,
+  main: LayoutItem,
+  secondaries: readonly LayoutItem[],
+  canvas: Size,
+  rand: () => number,
+): Piece[] | null {
+  switch (preset) {
+    case "B":
+      return arrangeDiagonal(main, secondaries, canvas, rand);
+    case "E":
+      return arrangeTall(main, secondaries, canvas, rand);
+    case "C":
+      return arrangeTable(main, secondaries, canvas, COMPACT_STYLE, rand);
+    case "D":
+      return arrangeTable(main, secondaries, canvas, WIDE_STYLE, rand);
+    default:
+      return arrangeTable(main, secondaries, canvas, HERO_STYLE, rand);
   }
 }
 
-function shiftBy(pieces: Piece[], dx: number): void {
-  for (const piece of pieces) {
-    piece.box = { ...piece.box, x: piece.box.x + dx };
+/** Строит одного кандидата раскладки. Возвращает null, если главный объект не размещается. */
+function composeCandidate(
+  items: readonly LayoutItem[],
+  canvas: Size,
+  seed: number,
+  preset: LayoutPreset,
+): Candidate | null {
+  const background = items.find((item) => item.role === "background") ?? null;
+  const primaries = items.filter((item) => item.role === "primary");
+  const main = primaries[0];
+  if (!main) return null;
+
+  const rand = createRandom(seed);
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // Раскладка по пресету. Главный объект — первый элемент результата.
+  const pieces = arrange(preset, main, primaries.slice(1), canvas, rand);
+  if (!pieces) return null;
+
+  // Опорная линия группы: нижний край главного объекта.
+  const baseline = bottomOf(pieces[0].box);
+
+  // Группу масштабируем целиком: сначала по ширине, затем по верхнему краю.
+  const cropped = rand() < CROP_CHANCE;
+  const maxGroupWidth = width * (cropped ? GROUP_WIDTH_LIMIT_CROPPED : GROUP_WIDTH_LIMIT);
+  let group = unionBoxes(pieces.map((p) => p.box));
+  if (group.width > maxGroupWidth) {
+    scaleAround(pieces, maxGroupWidth / group.width, group.x + group.width / 2, baseline);
+    group = unionBoxes(pieces.map((p) => p.box));
   }
-}
-
-/**
- * Допустимый горизонтальный сдвиг группы: ни один объект не выходит за край
- * холста больше чем на MAX_CROP своего размера. Ограничение проверяется по
- * каждому объекту отдельно, а не по группе целиком.
- */
-function horizontalShiftRange(pieces: readonly Piece[], canvasWidth: number): [number, number] {
-  let min = -Infinity;
-  let max = Infinity;
-  for (const { box } of pieces) {
-    min = Math.max(min, -box.width * MAX_CROP - box.x);
-    max = Math.min(max, canvasWidth + box.width * MAX_CROP - (box.x + box.width));
+  const minTop = height * TOP_MARGIN;
+  if (group.y < minTop) {
+    scaleAround(pieces, (baseline - minTop) / (baseline - group.y), group.x + group.width / 2, baseline);
+    group = unionBoxes(pieces.map((p) => p.box));
   }
-  return [min, max];
-}
 
-/**
- * Ограничивает позицию одного объекта: за край холста выходит не больше MAX_CROP
- * его размера.
- */
-function keepMostlyInside(box: Box, canvas: Size): Box {
-  return {
-    ...box,
-    x: clamp(box.x, -box.width * MAX_CROP, canvas.width - box.width * (1 - MAX_CROP)),
-    y: clamp(box.y, -box.height * MAX_CROP, canvas.height - box.height * (1 - MAX_CROP)),
-  };
-}
+  // Горизонтальное положение группы: по центру с небольшим сдвигом или с обрезкой краем.
+  let desiredLeft: number;
+  if (cropped) {
+    const crop = between(rand, CROP_RANGE) * group.width;
+    desiredLeft = rand() < 0.5 ? -crop : width - group.width + crop;
+  } else {
+    desiredLeft = (width - group.width) / 2 + jitter(rand, width * 0.03);
+  }
+  const [minShift, maxShift] = horizontalShiftRange(pieces.map((p) => p.box), width);
+  shiftBy(pieces, clamp(desiredLeft - group.x, minShift, maxShift));
 
-function toElement(instanceId: string, componentId: string, box: Box, z: number): CompositionElement {
-  return {
-    instanceId,
-    componentId,
-    position: { x: box.x, y: box.y },
-    size: { width: box.width, height: box.height },
-    rotation: 0,
-    z,
-    visible: true,
-  };
+  // Поворот по политике объектов; принимается только при сохранении границ и оценки.
+  applyRotations(pieces, canvas, rand);
+
+  // Фоновая копия главного: меньше него, стоит сбоку и дальше от зрителя.
+  // Копию отбрасываем, если после удержания в холсте она наползает на
+  // оригинал: прижим к краю уменьшает фактический сдвиг, и копия, которая
+  // задумывалась как сосед, превращается в закрытый наполовину дубль.
+  const mainBox = pieces[0].box;
+  const copies: Piece[] = [];
+  if (rand() < COPY_CHANCE) {
+    const direction = rand() < 0.5 ? -1 : 1;
+    const factor = between(rand, COPY_FACTOR);
+    const copyWidth = mainBox.width * factor;
+    const copyHeight = mainBox.height * factor;
+    const centerX = mainBox.x + mainBox.width / 2 + direction * mainBox.width * between(rand, COPY_SHIFT);
+    const copyBottom = baseline - height * between(rand, COPY_LIFT);
+    const copyBox = keepMostlyInside(
+      {
+        x: centerX - copyWidth / 2,
+        y: copyBottom - copyHeight,
+        width: copyWidth,
+        height: copyHeight,
+      },
+      canvas,
+    );
+    const smaller = Math.min(areaOf(mainBox), areaOf(copyBox));
+    const covered = smaller > 0 ? overlapArea(mainBox, copyBox) / smaller : 1;
+    if (covered <= SOFT_OVERLAP_LIMIT) {
+      copies.push({
+        componentId: main.componentId,
+        role: "copy",
+        box: copyBox,
+        angle: 0,
+        overlap: "allow",
+      });
+    }
+  }
+
+  const layers: Piece[] = [];
+  if (background) {
+    const size = fitInto(background.intrinsic, {
+      width: width * between(rand, BACKGROUND_SCALE),
+      height: height * between(rand, BACKGROUND_SCALE),
+    });
+    // Дальний план: верхняя часть холста. Нижний край привязан к линии
+    // дальнего плана, но фон не выходит за верхний край — это подложка,
+    // а не объект, который можно обрезать.
+    const bottom = height * between(rand, BACKGROUND_BOTTOM);
+    layers.push({
+      componentId: background.componentId,
+      role: "background",
+      box: {
+        x: clamp((width - size.width) / 2 + jitter(rand, width * 0.06), 0, Math.max(0, width - size.width)),
+        y: Math.max(0, bottom - size.height),
+        width: size.width,
+        height: size.height,
+      },
+      angle: 0,
+      overlap: "allow",
+    });
+  }
+  layers.push(...copies);
+  layers.push(...[...pieces].sort((a, b) => bottomOf(a.box) - bottomOf(b.box)));
+
+  return { pieces, layers };
 }
 
 /** Случайное зерно, если вызывающий код его не передал. */
@@ -210,133 +462,46 @@ function freshSeed(): number {
  *
  * Порядок слоёв снизу вверх: подложка, фоновая копия главного, объекты по
  * глубине (дальние ниже, ближние выше). Первый primary считается главным.
+ * Выбирается лучший из нескольких кандидатов по Composition Scorer: сначала
+ * валидные, затем по общей оценке. Первый кандидат использует зерно напрямую,
+ * поэтому одинаковое зерно даёт одинаковый результат.
  */
 export function buildAutoLayout(
   items: readonly LayoutItem[],
   { canvas, seed }: AutoLayoutOptions,
 ): CompositionElement[] {
-  const background = items.find((item) => item.role === "background") ?? null;
-  const primaries = items.filter((item) => item.role === "primary");
-  const main = primaries[0];
-  if (!main) return [];
+  const base = seed ?? freshSeed();
+  const primaryCount = items.filter((item) => item.role === "primary").length;
+  // Пресет один на весь вызов: кандидаты сравнимы между собой.
+  const preset = choosePreset(canvas, primaryCount, base);
 
-  const rand = createRandom(seed ?? freshSeed());
-  const width = canvas.width;
-  const height = canvas.height;
+  let best: Candidate | null = null;
+  let bestScore: Score | null = null;
 
-  // Линия стола и главный объект. Высота ограничена линией, чтобы объект не уходил за верхний край.
-  const baseline = height * between(rand, BASELINE);
-  const mainSize = fitInto(main.intrinsic, {
-    width: width * between(rand, MAIN_WIDTH),
-    height: Math.min(height * between(rand, MAIN_HEIGHT), baseline),
-  });
-  if (mainSize.width <= 0 || mainSize.height <= 0) return [];
-
-  const mainX = width / 2 - mainSize.width / 2 + jitter(rand, width * 0.05);
-  const pieces: Piece[] = [
-    {
-      componentId: main.componentId,
-      box: { x: mainX, y: baseline - mainSize.height, width: mainSize.width, height: mainSize.height },
-    },
-  ];
-
-  // Вспомогательные объекты ставятся рядом с главным и друг с другом, чередуя стороны.
-  let side = rand() < 0.5 ? -1 : 1;
-  let left = mainX;
-  let right = mainX + mainSize.width;
-  for (const item of primaries.slice(1)) {
-    const size = fitInto(item.intrinsic, {
-      width: mainSize.width * SECONDARY_WIDTH,
-      height: mainSize.height * between(rand, SECONDARY_HEIGHT),
-    });
-    if (size.width <= 0 || size.height <= 0) continue;
-
-    const overlap = between(rand, SECONDARY_OVERLAP) * size.width;
-    const bottom = baseline + jitter(rand, height * LINE_JITTER);
-    let x: number;
-    if (side > 0) {
-      x = right - overlap;
-      right = x + size.width;
-    } else {
-      x = left + overlap - size.width;
-      left = x;
+  for (let k = 0; k < CANDIDATE_COUNT; k += 1) {
+    const candidate = composeCandidate(
+      items,
+      canvas,
+      (base + Math.imul(k, 0x9e3779b9)) >>> 0,
+      preset,
+    );
+    if (!candidate) continue;
+    const score = scoreLayout(candidate.pieces, canvas);
+    if (isBetterScore(score, bestScore)) {
+      best = candidate;
+      bestScore = score;
     }
-    pieces.push({
-      componentId: item.componentId,
-      box: { x, y: bottom - size.height, width: size.width, height: size.height },
-    });
-    side = -side;
   }
 
-  // Группу масштабируем целиком: сначала по ширине, затем по верхнему краю.
-  const cropped = rand() < CROP_CHANCE;
-  const maxGroupWidth = width * (cropped ? GROUP_WIDTH_LIMIT_CROPPED : GROUP_WIDTH_LIMIT);
-  let group = unionOf(pieces);
-  if (group.width > maxGroupWidth) {
-    scaleAround(pieces, maxGroupWidth / group.width, group.x + group.width / 2, baseline);
-    group = unionOf(pieces);
-  }
-  const minTop = height * TOP_MARGIN;
-  if (group.y < minTop) {
-    scaleAround(pieces, (baseline - minTop) / (baseline - group.y), group.x + group.width / 2, baseline);
-    group = unionOf(pieces);
-  }
+  if (!best) return [];
 
-  // Горизонтальное положение группы: по центру с небольшим сдвигом или с обрезкой краем.
-  let desiredLeft: number;
-  if (cropped) {
-    const crop = between(rand, CROP_RANGE) * group.width;
-    desiredLeft = rand() < 0.5 ? -crop : width - group.width + crop;
-  } else {
-    desiredLeft = (width - group.width) / 2 + jitter(rand, width * 0.03);
-  }
-  const [minShift, maxShift] = horizontalShiftRange(pieces, width);
-  shiftBy(pieces, clamp(desiredLeft - group.x, minShift, maxShift));
-
-  // Фоновая копия главного: меньше него, выглядывает сбоку и стоит дальше от зрителя.
-  const mainBox = pieces[0].box;
-  const copies: Piece[] = [];
-  if (rand() < COPY_CHANCE) {
-    const direction = rand() < 0.5 ? -1 : 1;
-    const factor = between(rand, COPY_FACTOR);
-    const copyWidth = mainBox.width * factor;
-    const copyHeight = mainBox.height * factor;
-    const centerX = mainBox.x + mainBox.width / 2 + direction * mainBox.width * between(rand, COPY_SHIFT);
-    const copyBottom = baseline - height * between(rand, COPY_LIFT);
-    copies.push({
-      componentId: main.componentId,
-      box: keepMostlyInside(
-        {
-          x: centerX - copyWidth / 2,
-          y: copyBottom - copyHeight,
-          width: copyWidth,
-          height: copyHeight,
-        },
-        canvas,
-      ),
-    });
-  }
-
-  const layers: Piece[] = [];
-  if (background) {
-    const size = fitInto(background.intrinsic, {
-      width: width * between(rand, BACKGROUND_SCALE),
-      height: height * between(rand, BACKGROUND_SCALE),
-    });
-    layers.push({
-      componentId: background.componentId,
-      box: {
-        x: (width - size.width) / 2 + jitter(rand, width * 0.02),
-        y: (height - size.height) / 2 + jitter(rand, height * 0.02),
-        width: size.width,
-        height: size.height,
-      },
-    });
-  }
-  layers.push(...copies);
-  layers.push(...[...pieces].sort((a, b) => bottomOf(a.box) - bottomOf(b.box)));
-
-  return layers.map((layer, index) =>
-    toElement(`i${index + 1}`, layer.componentId, layer.box, index + 1),
-  );
+  return best.layers.map((layer, index) => ({
+    instanceId: `i${index + 1}`,
+    componentId: layer.componentId,
+    position: { x: layer.box.x, y: layer.box.y },
+    size: { width: layer.box.width, height: layer.box.height },
+    rotation: layer.angle,
+    z: index + 1,
+    visible: true,
+  }));
 }
