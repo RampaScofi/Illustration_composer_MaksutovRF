@@ -49,7 +49,7 @@ src/lib/              чистая логика: без React, без DOM*; се
   composition/projects.ts вкладки проектов: создание, переименование, закрытие
   ai/types.ts          настройки ИИ, запрос и проверенный вариант
   ai/contract.ts       системный промпт, сообщение пользователя, каталог для модели
-  ai/providers.ts      провайдеры (OpenAI, Anthropic, свой endpoint), формирование запроса
+  ai/providers.ts      провайдеры (OpenAI, Anthropic, Groq, свой endpoint), формирование запроса
   ai/validate.ts       проверка ответа модели: id, роли, категории, размер
   ai/request.ts        разбор тела запроса маршрута (лимиты длины и числа вариантов)
   ai/settings.ts       хранение настроек в localStorage, причина блокировки ИИ
