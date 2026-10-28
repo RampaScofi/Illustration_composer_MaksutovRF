@@ -40,7 +40,7 @@ function extractInner(svg: string): string {
 
 function applyIdPrefix(inner: string, prefix: string): string {
   return inner
-    .replace(/\sid="([^"]+)"/g, (_m, id: string) => `id="${prefix}__${id}"`)
+    .replace(/(\s)id="([^"]+)"/g, (_m, space: string, id: string) => `${space}id="${prefix}__${id}"`)
     .replace(/url\(#([^)]+)\)/g, (_m, ref: string) => `url(#${prefix}__${ref})`);
 }
 

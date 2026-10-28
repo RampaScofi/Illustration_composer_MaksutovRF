@@ -62,9 +62,13 @@ export function checkNonEmptyIds(components: LibraryComponent[]): string[] {
  * находится в defs (который обрабатывается отдельно).
  */
 export function uniqueSvgIds(svg: string, prefix: string): string {
-  // 1. Префиксовать все id="..." атрибуты
-  const idPattern = /\sid="([^"]+)"/g;
-  let result = svg.replace(idPattern, (_whole, id: string) => `id="${prefix}__${id}"`);
+  // 1. Префиксовать все id="..." атрибуты. Пробел перед атрибутом сохраняется,
+  // иначе получится невалидная разметка вида <clipPathid="...">.
+  const idPattern = /(\s)id="([^"]+)"/g;
+  let result = svg.replace(
+    idPattern,
+    (_whole, space: string, id: string) => `${space}id="${prefix}__${id}"`,
+  );
 
   // 2. Префиксовать все url(#) ссылки (включая clip-path, mask, filter, fill, stroke)
   const urlPattern = /url\(#([^)]+)\)/g;
