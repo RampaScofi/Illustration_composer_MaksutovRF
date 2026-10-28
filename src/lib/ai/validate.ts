@@ -108,6 +108,8 @@ function checkVariant(
     if (typeof record.background !== "string") return null;
     const bg = byId.get(record.background);
     if (!bg || bg.role !== "background") return null;
+    // Подложка не может быть тем же предметом, что и объект переднего плана.
+    if (categories.has(bg.category)) return null;
     backgroundId = bg.id;
   }
 

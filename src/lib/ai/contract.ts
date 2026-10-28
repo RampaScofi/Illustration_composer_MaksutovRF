@@ -53,15 +53,21 @@ export function buildAiCatalog(
   return components.flatMap((component) => {
     if (component.size !== size) return [];
     if (component.role !== "primary" && component.role !== "background") return [];
-    return [
-      {
-        id: component.id,
-        name: component.name,
-        aliases: component.aliases.slice(0, 20),
-        tags: component.tags.slice(0, 30),
-        role: component.role,
-        category: component.sourceIllustrationId,
-      },
-    ];
+    const entry: AiCatalogEntry = {
+      id: component.id,
+      name: component.name,
+      aliases: component.aliases.slice(0, 20),
+      tags: component.tags.slice(0, 30),
+      role: component.role,
+      category: component.sourceIllustrationId,
+    };
+    // Метаданные добавляются только когда заданы: без выдуманных значений.
+    if (component.visualWeight) entry.visualWeight = component.visualWeight;
+    if (component.groupTags?.length) entry.groupTags = component.groupTags.slice(0, 10);
+    if (component.compositionHints?.length) {
+      entry.compositionHints = component.compositionHints.slice(0, 10);
+    }
+    if (component.avoidWith?.length) entry.avoidWith = component.avoidWith.slice(0, 20);
+    return [entry];
   });
 }

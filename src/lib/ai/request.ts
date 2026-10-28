@@ -16,7 +16,7 @@ const MAX_NAME_LENGTH = 200;
 const MAX_LIST_ITEMS = 30;
 const MAX_LIST_ITEM_LENGTH = 80;
 
-const PROVIDER_IDS: readonly AiProviderId[] = ["openai", "anthropic", "custom"];
+const PROVIDER_IDS: readonly AiProviderId[] = ["openai", "anthropic", "groq", "custom"];
 
 export type ParseResult =
   | { ok: true; value: AiComposeRequest }
@@ -49,7 +49,19 @@ function parseCatalogEntry(raw: unknown): AiCatalogEntry | null {
   const tags = strList(r.tags, MAX_LIST_ITEMS, MAX_LIST_ITEM_LENGTH);
   if (!id || !name || !category || !aliases || !tags) return null;
   if (r.role !== "primary" && r.role !== "background") return null;
-  return { id, name, aliases, tags, role: r.role, category };
+  const entry: AiCatalogEntry = { id, name, aliases, tags, role: r.role, category };
+
+  // Необязательные метаданные: при неверном значении поле пропускается, запись остаётся.
+  if (r.visualWeight === "light" || r.visualWeight === "medium" || r.visualWeight === "heavy") {
+    entry.visualWeight = r.visualWeight;
+  }
+  const groupTags = strList(r.groupTags, MAX_LIST_ITEMS, MAX_LIST_ITEM_LENGTH);
+  if (groupTags?.length) entry.groupTags = groupTags;
+  const hints = strList(r.compositionHints, MAX_LIST_ITEMS, MAX_LIST_ITEM_LENGTH);
+  if (hints?.length) entry.compositionHints = hints;
+  const avoidWith = strList(r.avoidWith, MAX_LIST_ITEMS, MAX_NAME_LENGTH);
+  if (avoidWith?.length) entry.avoidWith = avoidWith;
+  return entry;
 }
 
 /** Проверяет тело POST-запроса и возвращает строго типизированное значение. */

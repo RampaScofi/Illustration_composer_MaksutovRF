@@ -2,6 +2,7 @@ import type { CompositionElement } from "../../types/composition.ts";
 import type { Size } from "../../types/geometry.ts";
 import type { LibraryComponent } from "../../types/library.ts";
 import { buildAutoLayout, type LayoutItem } from "../composition/autoLayout.ts";
+import { conflicts, layoutItemFromComponent } from "../library/layoutMetadata.ts";
 import type { AiVariantPlan } from "./types.ts";
 
 export type VariantLayout = {
@@ -44,28 +45,37 @@ export function variantToLayoutItems(
   plan: AiVariantPlan,
   components: ReadonlyMap<string, LibraryComponent>,
 ): LayoutItem[] | null {
-  const items: LayoutItem[] = [];
+  const picked: LibraryComponent[] = [];
 
   for (const id of plan.primaryIds) {
     const component = components.get(id);
     if (!component || component.role !== "primary") return null;
-    items.push(toLayoutItem(component));
+    picked.push(component);
   }
 
   if (plan.backgroundId !== null) {
     const background = components.get(plan.backgroundId);
     if (!background || background.role !== "background") return null;
-    items.push(toLayoutItem(background));
+    // Подложка не должна быть тем же предметом, что и объект переднего плана.
+    const sameObject = picked.some(
+      (p) => p.id === background.id || p.sourceIllustrationId === background.sourceIllustrationId,
+    );
+    if (sameObject) return null;
+    picked.push(background);
   }
 
-  return items.length > 0 ? items : null;
+  if (picked.length === 0) return null;
+
+  // Вариант с парой из avoidWith отбрасывается целиком, а не чинится молча.
+  for (let i = 0; i < picked.length; i += 1) {
+    for (let j = i + 1; j < picked.length; j += 1) {
+      if (conflicts(picked[i], picked[j])) return null;
+    }
+  }
+
+  return picked.map(toLayoutItem);
 }
 
 export function toLayoutItem(component: LibraryComponent): LayoutItem {
-  return {
-    componentId: component.id,
-    role: component.role,
-    intrinsic: component.intrinsicSize,
-    category: component.sourceIllustrationId,
-  };
+  return layoutItemFromComponent(component);
 }

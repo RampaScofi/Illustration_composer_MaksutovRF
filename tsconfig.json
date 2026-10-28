@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "figma_tmp"]
+  "exclude": ["node_modules", "figma_tmp", "figma-plugin"]
 }

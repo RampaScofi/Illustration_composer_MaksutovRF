@@ -161,7 +161,7 @@ export function ProjectShell() {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col bg-white">
-      <AppHeader stageLabel="Этап 4 — композиция" />
+      <AppHeader />
 
       {loadError ? (
         <div className="m-4 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">

@@ -9,6 +9,7 @@ import {
   resolveCanvasSize,
 } from "@/lib/composition/canvas";
 import { buildAutoLayout } from "@/lib/composition/autoLayout";
+import { layoutItemFromComponent } from "@/lib/library/layoutMetadata";
 import { repaintContents, mappingForComponent } from "@/lib/palette/apply";
 import {
   CANVAS_BACKGROUNDS,
@@ -145,12 +146,7 @@ export function Workbench({
       }
 
       const layout = buildAutoLayout(
-        plan.items.map((item) => ({
-          componentId: item.component.id,
-          role: item.component.role,
-          intrinsic: item.component.intrinsicSize,
-          category: item.component.sourceIllustrationId,
-        })),
+        plan.items.map((item) => layoutItemFromComponent(item.component)),
         { canvas: canvasSize },
       );
 

@@ -67,6 +67,19 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!upstream.ok) {
+    // Статус провайдера не содержит секретов, но тело ответа не пробрасываем.
+    if (upstream.status === 429) {
+      return errorResponse(
+        429,
+        "Превышен лимит запросов провайдера. Попробуйте позже или проверьте квоту.",
+      );
+    }
+    if (upstream.status === 401 || upstream.status === 403) {
+      return errorResponse(
+        502,
+        `Провайдер отклонил доступ (${upstream.status}). Проверьте ключ и права доступа.`,
+      );
+    }
     return errorResponse(
       502,
       `Провайдер вернул ошибку ${upstream.status}. Проверьте ключ, модель и доступ.`,

@@ -31,6 +31,13 @@ export const AI_PROVIDERS: readonly ProviderPreset[] = [
     baseUrlEditable: false,
   },
   {
+    id: "groq",
+    label: "Groq (бесплатный тариф)",
+    defaultBaseUrl: "https://api.groq.com/openai/v1",
+    modelHint: "имя модели из консоли Groq",
+    baseUrlEditable: false,
+  },
+  {
     id: "custom",
     label: "Свой endpoint (OpenAI-совместимый)",
     defaultBaseUrl: "",
@@ -43,22 +50,17 @@ export function findProvider(id: string): ProviderPreset | null {
   return AI_PROVIDERS.find((provider) => provider.id === id) ?? null;
 }
 
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+// Без глобального URL: он отсутствует в библиотеке ES2020 плагина Figma и не гарантирован
+// в его песочнице. Проверка сводится к схеме и хосту, как и раньше.
+const HTTPS_URL = /^https:\/\/[^\s/?#@]+(?:[/?#]\S*)?$/i;
+const LOCAL_HTTP_URL = /^http:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d{1,5})?(?:[/?#]\S*)?$/i;
 
 /**
  * Адрес пользовательского endpoint: только https, либо http для localhost.
  * Это ограничение снижает риск отправки ключа по открытому каналу.
  */
 export function isAllowedBaseUrl(raw: string): boolean {
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    return false;
-  }
-  if (url.protocol === "https:") return url.hostname.length > 0;
-  if (url.protocol === "http:") return LOCAL_HOSTS.has(url.hostname);
-  return false;
+  return HTTPS_URL.test(raw) || LOCAL_HTTP_URL.test(raw);
 }
 
 export type ChatTarget = {
