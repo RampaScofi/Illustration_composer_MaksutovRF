@@ -13,7 +13,7 @@ export type ValidationResult<T> =
   | { ok: false; value: null; issues: ValidationIssue[] };
 
 const SIZES = new Set(["L", "S"]);
-const ROLES = new Set(["primary", "background"]);
+const ROLES = new Set(["primary", "background", "backdrop"]);
 
 function asRecord(raw: unknown): Record<string, unknown> | null {
   return typeof raw === "object" && raw !== null && !Array.isArray(raw)
@@ -47,7 +47,7 @@ export function validateLibraryComponent(
     issues.push({ field: "size", message: "Допустимые размеры: L, S" });
   }
   if (!ROLES.has(String(item.role))) {
-    issues.push({ field: "role", message: "Допустимые роли: primary, background" });
+    issues.push({ field: "role", message: "Допустимые роли: primary, background, backdrop" });
   }
 
   if (!nonEmptyString(item.svgPath)) {
@@ -87,11 +87,71 @@ export function validateLibraryComponent(
     issues.push({ field: "tags", message: "tags — массив строк" });
   }
 
+  issues.push(...validateOptionalCompositionFields(item));
+
   if (issues.length > 0) {
     return { ok: false, value: null, issues };
   }
 
   return { ok: true, value: raw as LibraryComponent, issues: [] };
+}
+
+const VISUAL_WEIGHTS = new Set(["light", "medium", "heavy"]);
+const ROTATION_POLICIES = new Set(["locked", "upright", "limited", "free"]);
+const OVERLAP_POLICIES = new Set(["allow", "avoid", "forbid"]);
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((v) => typeof v === "string");
+}
+
+/**
+ * Необязательные поля компоновки. Отсутствие поля допустимо (берётся умолчание),
+ * но заданное значение должно быть корректным: иначе компонент отклоняется,
+ * а не тихо получает неверную геометрию.
+ */
+function validateOptionalCompositionFields(item: Record<string, unknown>): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const has = (key: string) => item[key] !== undefined && item[key] !== null;
+
+  if (has("visualWeight") && !VISUAL_WEIGHTS.has(String(item.visualWeight))) {
+    issues.push({ field: "visualWeight", message: "Допустимые значения: light, medium, heavy" });
+  }
+  if (has("preferredScale")) {
+    const s = item.preferredScale;
+    if (typeof s !== "number" || !Number.isFinite(s) || s < 0.2 || s > 1) {
+      issues.push({ field: "preferredScale", message: "preferredScale — число от 0.2 до 1" });
+    }
+  }
+  if (has("rotationPolicy") && !ROTATION_POLICIES.has(String(item.rotationPolicy))) {
+    issues.push({
+      field: "rotationPolicy",
+      message: "Допустимые значения: locked, upright, limited, free",
+    });
+  }
+  if (has("rotationRange")) {
+    const r = item.rotationRange;
+    const ok =
+      Array.isArray(r) &&
+      r.length === 2 &&
+      typeof r[0] === "number" &&
+      typeof r[1] === "number" &&
+      Number.isFinite(r[0]) &&
+      Number.isFinite(r[1]) &&
+      r[0] <= r[1];
+    if (!ok) issues.push({ field: "rotationRange", message: "rotationRange — пара [min, max], min ≤ max" });
+  }
+  if (has("allowDuplicate") && typeof item.allowDuplicate !== "boolean") {
+    issues.push({ field: "allowDuplicate", message: "allowDuplicate — boolean" });
+  }
+  if (has("overlapPolicy") && !OVERLAP_POLICIES.has(String(item.overlapPolicy))) {
+    issues.push({ field: "overlapPolicy", message: "Допустимые значения: allow, avoid, forbid" });
+  }
+  for (const key of ["groupTags", "compatibleWith", "avoidWith", "compositionHints"]) {
+    if (has(key) && !isStringArray(item[key])) {
+      issues.push({ field: key, message: `${key} — массив строк` });
+    }
+  }
+  return issues;
 }
 
 export function validateLibraryManifest(raw: unknown): ValidationResult<LibraryManifest> {

@@ -15,9 +15,28 @@ export type ComponentRole = "primary" | "background" | "backdrop";
  */
 export type RepaintConstraint = "full" | "monochrome-only" | "none";
 
+/** Визуальный вес объекта: влияет на баланс композиции. */
+export type VisualWeight = "light" | "medium" | "heavy";
+
+/**
+ * Политика поворота при автокомпоновке:
+ * "locked" — не поворачивать; "upright" — лёгкий наклон до нескольких градусов;
+ * "limited" — поворот в пределах rotationRange; "free" — то же, но допускается больший диапазон.
+ */
+export type RotationPolicy = "locked" | "upright" | "limited" | "free";
+
+/**
+ * Допустимость перекрытия с соседними объектами:
+ * "allow" — допустимо; "avoid" — по возможности без перекрытия; "forbid" — не перекрывать.
+ */
+export type OverlapPolicy = "allow" | "avoid" | "forbid";
+
 /**
  * Один переиспользуемый векторный компонент.
  * Ссылается на заранее подготовленный SVG-файл.
+ *
+ * Поля композиции (с visualWeight до compositionHints) необязательны: отсутствующие
+ * значения заполняются нейтральными умолчаниями в lib/library/metadata.ts.
  */
 export type LibraryComponent = {
   /** Стабильный идентификатор внутри библиотеки. */
@@ -46,6 +65,34 @@ export type LibraryComponent = {
   repaint: RepaintConstraint;
   /** Количество дочерних узлов во Figma (для аудита сложности). */
   sourceNodeCount: number;
+
+   /** Визуальный вес. По умолчанию: primary — medium, background — light. */
+  visualWeight?: VisualWeight;
+  /** Предпочтительный масштаб относительно доступного места, от 0.2 до 1. */
+  preferredScale?: number;
+  /**
+   * Плотность графики: доля охватывающего прямоугольника, реально покрытая
+   * заливаемыми фигурами и штрихами (0..1). Разрежённые объекты (тонкие
+   * линии, много пустоты) имеют малую плотность и в компоновке занимают
+   * меньшую долю холста при том же viewBox. Измеряется по SVG-файлу.
+   */
+  contentDensity?: number;
+  /** Политика поворота. По умолчанию locked. */
+  rotationPolicy?: RotationPolicy;
+  /** Диапазон поворота в градусах [min, max]. По умолчанию [-10, 10]. */
+  rotationRange?: [number, number];
+  /** Может ли объект повторяться в одной композиции. По умолчанию false. */
+  allowDuplicate?: boolean;
+  /** Тематические группы, например ["обучение", "идеи"]. */
+  groupTags?: string[];
+  /** id объектов, с которыми сочетается. Информативно: используется для предпочтения. */
+  compatibleWith?: string[];
+  /** id объектов, с которыми нельзя ставить в одну композицию. */
+  avoidWith?: string[];
+  /** Политика перекрытия. По умолчанию allow. */
+  overlapPolicy?: OverlapPolicy;
+  /** Свободные подсказки для будущих правил композиции. */
+  compositionHints?: string[];
 };
 
 /**
