@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VectorMuse</title>
+<style>
+  :root {
+    --accent: #6d5dfb;
+    --accent-soft: #eeebff;
+    --ink: #1f2233;
+    --muted: #6b7085;
+    --line: #e4e6ef;
+    --panel: #f6f7fb;
+    --card: #ffffff;
+    --ok: #1e8e5a;
+    --err: #c2413b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); font-size: 12px; }
+
+  .top {
+    flex: none;
+    height: 52px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+  .mark {
+    width: 22px; height: 22px; border-radius: 7px;
+    background: var(--accent); display: grid; place-items: center;
+  }
+  .icon-btn {
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); cursor: pointer; display: grid; place-items: center; padding: 0;
+  }
+  .icon-btn:hover { background: var(--panel); }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  main {
+    flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    padding: 12px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+    min-width: 0;
+  }
+  h2 { font-size: 15px; margin: 0 0 8px; font-weight: 600; }
+  h3 { font-size: 12px; margin: 0 0 6px; color: var(--muted); font-weight: 600; }
+  .stack { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
+
+  .seg {
+    display: flex; gap: 2px; padding: 3px; border-radius: 9px; background: #f1f2f7;
+  }
+  .seg button {
+    flex: 1; border: 1px solid transparent; background: transparent; cursor: pointer;
+    padding: 6px 8px; border-radius: 7px; color: var(--muted); font-weight: 500;
+  }
+  .seg button[aria-pressed="true"] {
+    background: var(--card); color: var(--ink); border-color: var(--line);
+  }
+
+  input, select, textarea {
+    width: 100%; min-width: 0; padding: 8px 10px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--card);
+  }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid rgba(109, 93, 251, 0.35); outline-offset: 0; border-color: var(--accent);
+  }
+  .key-row { display: flex; gap: 6px; }
+  .key-row input { flex: 1; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip {
+    border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+    padding: 4px 10px; font-size: 12px; cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); }
+
+  .btn {
+    height: 36px; padding: 0 14px; border-radius: 9px; border: 1px solid transparent;
+    font-weight: 600; cursor: pointer;
+  }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:not(:disabled):hover { filter: brightness(0.95); }
+  .btn.ghost { background: var(--card); border-color: var(--line); }
+  .btn.ghost:not(:disabled):hover { background: var(--panel); }
+  .btn.small { height: 30px; font-size: 12px; padding: 0 10px; }
+  .btn.block { width: 100%; }
+
+  .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .opt {
+    border: 1.5px solid var(--line); border-radius: 10px; padding: 6px; background: var(--card);
+    cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  }
+  .opt:hover { border-color: #c9c4fb; }
+  .opt[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .swatches { display: flex; height: 26px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.06); }
+  .swatches i { flex: 1; }
+  .opt-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fmt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .fmt {
+    border: 1px solid var(--line); border-radius: 8px; background: var(--card);
+    padding: 6px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px;
+    min-width: 0;
+  }
+  .fmt b { font-weight: 600; }
+  .fmt span { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .fmt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+
+  .search {
+    margin-bottom: 8px;
+  }
+  .lib-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    max-height: 240px; overflow-y: auto; padding: 2px;
+  }
+  .lib-item {
+    border: 1px solid var(--line); border-radius: 8px; background: var(--card); cursor: pointer;
+    padding: 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0;
+  }
+  .lib-item img { width: 100%; height: 48px; object-fit: contain; }
+  .lib-item[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .lib-name {
+    font-size: 11px; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sel-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .sel-list li {
+    display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px;
+  }
+  .sel-list img { width: 36px; height: 36px; object-fit: contain; background: var(--panel); border-radius: 6px; flex: none; }
+  .sel-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sel-remove {
+    border: 0; background: transparent; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; padding: 4px 6px; border-radius: 6px;
+  }
+  .sel-remove:hover { background: var(--panel); color: var(--ink); }
+
+  .collapsible {
+    width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    background: none; border: 0; padding: 0; cursor: pointer; text-align: left; font-weight: 600;
+  }
+  .collapsible .chev { transition: transform 0.15s; color: var(--muted); }
+  .collapsible[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+  .note {
+    background: #fff8e6; border: 1px solid #f3e2a8; border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #6b5410;
+  }
+  .pre {
+    margin: 0; font-family: ui-monospace, Consolas, monospace; font-size: 11px; background: var(--panel);
+    border-radius: 8px; padding: 8px; white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow: auto;
+  }
+  textarea.svg { font-family: ui-monospace, Consolas, monospace; font-size: 11px; height: 90px; }
+
+  .statusbar { flex: none; min-height: 22px; padding: 0 14px; font-size: 12px; display: flex; align-items: center; }
+  .status.ok { color: var(--ok); }
+  .status.error { color: var(--err); }
+  .status.busy { color: var(--muted); }
+
+  .footer {
+    flex: none; display: flex; gap: 8px;
+    padding: 10px 12px; background: var(--card); border-top: 1px solid var(--line);
+  }
+  .footer .btn { flex: 1; min-width: 0; padding: 0 8px; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><span class="mark" aria-hidden="true">
+    <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 2 L6 10 L11 2" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+  </span>VectorMuse</div>
+  <button class="icon-btn" id="btn-ai" title="Подключение нейросети" aria-label="Подключение нейросети">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </button>
+</header>
+
+<main>
+  <div class="seg" role="group" aria-label="Способ подбора">
+    <button type="button" data-tab="describe" aria-pressed="true">По описанию</button>
+    <button type="button" data-tab="components" aria-pressed="false">Компоненты</button>
+  </div>
+
+  <section class="card" id="tab-describe">
+    <h2>Опишите иллюстрацию</h2>
+    <textarea id="query" rows="3" placeholder="Например: обучение и чтение за столом"></textarea>
+    <div class="chips" id="examples">
+      <button type="button" class="chip" data-query="Обучение">Обучение</button>
+      <button type="button" class="chip" data-query="Продуктивность">Продуктивность</button>
+      <button type="button" class="chip" data-query="Дизайн">Дизайн</button>
+    </div>
+    <div class="stack" style="margin-top:10px">
+      <button type="button" class="btn primary block" id="create-describe" disabled>Создать композицию</button>
+    </div>
+  </section>
+
+  <section class="card hidden" id="tab-components">
+    <h2>Компоненты библиотеки</h2>
+    <input id="search" class="search" type="search" placeholder="Поиск по названию">
+    <div class="lib-grid" id="library"></div>
+    <h3 style="margin-top:12px">Выбрано: <span id="sel-count">0</span></h3>
+    <ul class="sel-list" id="selected"></ul>
+    <div class="muted" id="sel-empty" style="margin-top:6px">Нажмите на компонент, чтобы добавить его в набор. Порядок слоёв задаёт раскладка.</div>
+  </section>
+
+  <section class="card">
+    <h3>Цветовая схема</h3>
+    <div class="cards3" id="schemes"></div>
+  </section>
+
+  <section class="card">
+    <h3>Фон холста</h3>
+    <div class="cards3" id="backgrounds"></div>
+    <div class="muted" style="margin-top:6px">Фон — это подложка холста. Он не зависит от цветовой схемы.</div>
+  </section>
+
+  <section class="card">
+    <div class="row2">
+      <div class="stack">
+        <h3>Размер компонентов</h3>
+        <div class="seg" role="group" aria-label="Размер компонентов">
+          <button type="button" data-size="L" aria-pressed="true">L</button>
+          <button type="button" data-size="S" aria-pressed="false">S</button>
+        </div>
+      </div>
+      <div class="stack">
+        <h3>Формат холста</h3>
+        <div class="muted" id="format-label">1:1</div>
+      </div>
+    </div>
+    <div class="fmt-grid" id="formats" style="margin-top:8px"></div>
+  </section>
+
+  <section class="card">
+    <button type="button" class="collapsible" id="ai-toggle" aria-expanded="false" aria-controls="ai-body">
+      <span>Подключение нейросети</span>
+      <span class="muted" id="ai-summary">Локально</span>
+      <span class="chev">▾</span>
+    </button>
+    <div class="stack hidden" id="ai-body" style="margin-top:10px">
+      <div class="seg" role="group" aria-label="Режим подбора">
+        <button type="button" data-mode="local" aria-pressed="true">Локально</button>
+        <button type="button" data-mode="ai" aria-pressed="false">AI API</button>
+      </div>
+      <div class="muted" id="ai-local-note">Подбор работает по словарю библиотеки: без сети и без ключа.</div>
+
+      <div class="stack hidden" id="ai-fields">
+        <label class="field"><span>Провайдер</span>
+          <select id="ai-provider"></select>
+        </label>
+        <label class="field hidden" id="ai-base-wrap"><span>Адрес endpoint</span>
+          <input id="ai-base" type="text" placeholder="https://host/v1">
+        </label>
+        <label class="field"><span>Модель</span>
+          <input id="ai-model" type="text" placeholder="имя модели">
+        </label>
+        <label class="field"><span>API-ключ</span>
+          <div class="key-row">
+            <input id="ai-key" type="password" autocomplete="off" placeholder="введите новый ключ">
+            <button type="button" class="btn ghost small" id="ai-key-toggle">Показать</button>
+          </div>
+        </label>
+        <div class="muted" id="ai-key-state"></div>
+        <div class="note">Ключ хранится в локальном хранилище Figma на этом компьютере. Хранилище не зашифровано, поэтому используйте временные ключи (на 1–2 дня) и не вводите постоянные ключи с широкими правами. Ключ может оказаться в чужих руках при компрометации компьютера или файла Figma.</div>
+        <div class="note">В плагине подключён Groq: запросы уходят только на api.groq.com. OpenAI, Anthropic и свой endpoint требуют добавления домена в манифест (networkAccess.allowedDomains).</div>
+        <div class="row2">
+          <button type="button" class="btn primary small" id="ai-save">Сохранить</button>
+          <button type="button" class="btn ghost small" id="ai-delete">Удалить ключ</button>
+        </div>
+        <div class="status" id="ai-status"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <button type="button" class="collapsible" id="diag-toggle" aria-expanded="false" aria-controls="diag-body">
+      <span>Подробности</span>
+      <span class="muted">SVG и диагностика</span>
+      <span class="chev">▾</span>
+    </button>
+    <div class="stack hidden" id="diag-body" style="margin-top:10px">
+      <div>
+        <h3>Почему подобрано</h3>
+        <pre class="pre" id="diag-explain">Пока ничего не собрано.</pre>
+      </div>
+      <div>
+        <h3>Смысл запроса</h3>
+        <pre class="pre" id="diag-concepts">—</pre>
+      </div>
+      <div>
+        <h3>Диагностика</h3>
+        <pre class="pre" id="diag-info">—</pre>
+      </div>
+      <div class="stack">
+        <h3>SVG последнего экспорта</h3>
+        <textarea id="svg" class="svg" readonly placeholder="Нажмите «Экспорт SVG»"></textarea>
+        <div><button type="button" class="btn ghost small" id="copy-svg">Скопировать SVG</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="statusbar"><div class="status" id="status" role="status"></div></div>
+
+<footer class="footer">
+  <button type="button" class="btn primary" id="insert" disabled>Вставить в Figma</button>
+  <button type="button" class="btn ghost" id="add-frame" disabled>В выделенный фрейм</button>
+  <button type="button" class="btn ghost" id="export">Экспорт SVG</button>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var state = {
+    init: null,
+    tab: "describe",
+    size: "L",
+    format: "1:1",
+    schemeId: "violet",
+    backgroundId: "violet",
+    library: {},
+    selected: [],
+    search: "",
+    busy: false,
+    aiMode: "local",
+    ai: null,
+    aiPending: false,
+    diag: { explain: [], concepts: [], info: "" }
+  };
+
+  function send(msg) {
+    parent.postMessage({ pluginMessage: msg }, "*");
+  }
+
+  function thumb(svg) {
+    var img = document.createElement("img");
+    img.alt = "";
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    return img;
+  }
+
+  function setStatus(kind, text) {
+    var el = $("status");
+    el.className = "status " + (kind || "");
+    el.textContent = text || "";
+  }
+
+  function setAiStatus(kind, text) {
+    var el = $("ai-status");
+    el.className = "status " + (kind || "");
+    el.textContent = text || "";
+  }
+
+  function currentProvider() {
+    if (!state.init) return null;
+    var id = $("ai-provider").value;
+    for (var i = 0; i < state.init.providers.length; i++) {
+      if (state.init.providers[i].id === id) return state.init.providers[i];
+    }
+    return null;
+  }
+
+  function updateButtons() {
+    var describeReady = $("query").value.trim().length > 0;
+    var componentsReady = state.selected.length > 0;
+    var ready = state.tab === "describe" ? describeReady : componentsReady;
+    $("create-describe").disabled = state.busy || !describeReady;
+    // В режиме описания генерирует кнопка внутри панели, поэтому футерная скрыта (одна кнопка на режим).
+    $("insert").style.display = state.tab === "describe" ? "none" : "";
+    $("insert").disabled = state.busy || !ready;
+    $("export").disabled = state.busy;
+    $("insert").textContent = state.busy ? "Собираем…" : "Вставить в Figma";
+    $("add-frame").style.display = state.tab === "describe" ? "none" : "";
+    $("add-frame").disabled = state.busy || !componentsReady;
+    $("create-describe").textContent = state.busy ? "Собираем…" : "Создать композицию";
+  }
+
+  function renderTabs() {
+    var buttons = document.querySelectorAll("[data-tab]");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute("aria-pressed", String(buttons[i].getAttribute("data-tab") === state.tab));
+    }
+    $("tab-describe").classList.toggle("hidden", state.tab !== "describe");
+    $("tab-components").classList.toggle("hidden", state.tab !== "components");
+  }
+
+  function renderSizes() {
+    var buttons = document.querySelectorAll("[data-size]");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute("aria-pressed", String(buttons[i].getAttribute("data-size") === state.size));
+    }
+  }
+
+  function renderFormats() {
+    var wrap = $("formats");
+    wrap.textContent = "";
+    if (!state.init) return;
+    state.init.formats.forEach(function (f) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "fmt";
+      b.setAttribute("aria-pressed", String(f.id === state.format));
+      b.title = f.label;
+      var strong = document.createElement("b");
+      strong.textContent = f.id;
+      var label = document.createElement("span");
+      label.textContent = f.label;
+      b.appendChild(strong);
+      b.appendChild(label);
+      b.addEventListener("click", function () {
+        state.format = f.id;
+        renderFormats();
+      });
+      wrap.appendChild(b);
+    });
+    $("format-label").textContent = state.format;
+  }
+
+  function swatchRow(colors) {
+    var row = document.createElement("div");
+    row.className = "swatches";
+    colors.forEach(function (c) {
+      var i = document.createElement("i");
+      i.style.background = c;
+      row.appendChild(i);
+    });
+    return row;
+  }
+
+  function renderSchemes() {
+    var wrap = $("schemes");
+    wrap.textContent = "";
+    if (!state.init) return;
+    state.init.schemes.forEach(function (s) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt";
+      b.setAttribute("aria-pressed", String(s.id === state.schemeId));
+      b.title = s.name;
+      b.appendChild(swatchRow([s.background[0], s.background[1], s.background[2], s.object[0], s.object[1]]));
+      var name = document.createElement("span");
+      name.className = "opt-name";
+      name.textContent = s.shortName;
+      b.appendChild(name);
+      b.addEventListener("click", function () {
+        state.schemeId = s.id;
+        renderSchemes();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderBackgrounds() {
+    var wrap = $("backgrounds");
+    wrap.textContent = "";
+    if (!state.init) return;
+    state.init.backgrounds.forEach(function (bg) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt";
+      b.setAttribute("aria-pressed", String(bg.id === state.backgroundId));
+      b.title = bg.name;
+      var sw = document.createElement("div");
+      sw.className = "swatches";
+      var i = document.createElement("i");
+      i.style.background = bg.hex;
+      sw.appendChild(i);
+      b.appendChild(sw);
+      var name = document.createElement("span");
+      name.className = "opt-name";
+      name.textContent = bg.name;
+      b.appendChild(name);
+      b.addEventListener("click", function () {
+        state.backgroundId = bg.id;
+        renderBackgrounds();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderLibrary() {
+    var wrap = $("library");
+    wrap.textContent = "";
+    var items = state.library[state.size];
+    if (!items) {
+      var loading = document.createElement("div");
+      loading.className = "muted";
+      loading.textContent = "Загрузка библиотеки…";
+      wrap.appendChild(loading);
+      return;
+    }
+    var q = state.search.trim().toLowerCase();
+    var shown = items.filter(function (item) {
+      return !q || item.name.toLowerCase().indexOf(q) !== -1;
+    });
+    if (shown.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "muted";
+      empty.textContent = "Ничего не найдено";
+      wrap.appendChild(empty);
+      return;
+    }
+    shown.forEach(function (item) {
+      var picked = isSelected(item.id);
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "lib-item";
+      b.title = item.name;
+      b.setAttribute("aria-pressed", String(picked));
+      b.appendChild(thumb(item.svg));
+      var name = document.createElement("span");
+      name.className = "lib-name";
+      name.textContent = item.name;
+      b.appendChild(name);
+      b.addEventListener("click", function () { toggleSelected(item); });
+      wrap.appendChild(b);
+    });
+  }
+
+  function isSelected(id) {
+    return state.selected.some(function (s) { return s.id === id; });
+  }
+
+  function toggleSelected(item) {
+    var idx = -1;
+    for (var i = 0; i < state.selected.length; i++) {
+      if (state.selected[i].id === item.id) { idx = i; break; }
+    }
+    if (idx >= 0) {
+      state.selected.splice(idx, 1);
+    } else {
+      state.selected.push({ id: item.id, name: item.name, svg: item.svg, size: state.size });
+    }
+    renderSelected();
+    renderLibrary();
+    updateButtons();
+  }
+
+  function renderSelected() {
+    var list = $("selected");
+    list.textContent = "";
+    $("sel-count").textContent = String(state.selected.length);
+    $("sel-empty").classList.toggle("hidden", state.selected.length > 0);
+    state.selected.forEach(function (s, index) {
+      var li = document.createElement("li");
+      li.appendChild(thumb(s.svg));
+      var name = document.createElement("span");
+      name.className = "sel-name";
+      name.textContent = s.name;
+      li.appendChild(name);
+      var remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "sel-remove";
+      remove.setAttribute("aria-label", "Удалить " + s.name);
+      remove.title = "Удалить";
+      remove.textContent = "×";
+      remove.addEventListener("click", function () {
+        state.selected.splice(index, 1);
+        renderSelected();
+        renderLibrary();
+        updateButtons();
+      });
+      li.appendChild(remove);
+      list.appendChild(li);
+    });
+  }
+
+  function requestLibrary() {
+    if (!state.library[state.size]) {
+      send({ type: "library", size: state.size });
+    }
+  }
+
+  function setSize(size) {
+    if (size === state.size) return;
+    state.size = size;
+    var before = state.selected.length;
+    state.selected = state.selected.filter(function (s) { return s.size === size; });
+    if (state.selected.length !== before) {
+      setStatus("busy", "Компоненты другого размера убраны из набора.");
+    }
+    renderSizes();
+    renderSelected();
+    requestLibrary();
+    renderLibrary();
+    updateButtons();
+  }
+
+  function setTab(tab) {
+    state.tab = tab;
+    renderTabs();
+    if (tab === "components") requestLibrary();
+    updateButtons();
+  }
+
+  function renderDiag() {
+    $("diag-explain").textContent = state.diag.explain.length ? state.diag.explain.join("\n") : "Пока ничего не собрано.";
+    $("diag-concepts").textContent = state.diag.concepts.length ? state.diag.concepts.join(", ") : "—";
+    $("diag-info").textContent = state.diag.info || "—";
+  }
+
+  function generate() {
+    if (state.busy) return;
+    var msg;
+    if (state.tab === "describe") {
+      var query = $("query").value.trim();
+      if (!query) {
+        setStatus("error", "Опишите иллюстрацию или выберите тег.");
+        return;
+      }
+      msg = { type: "generate", query: query, ids: null, useAi: state.aiMode === "ai" };
+    } else {
+      if (state.selected.length === 0) {
+        setStatus("error", "Выберите хотя бы один компонент.");
+        return;
+      }
+      msg = { type: "generate", query: "", ids: state.selected.map(function (s) { return s.id; }) };
+    }
+    msg.size = state.size;
+    msg.schemeId = state.schemeId;
+    msg.backgroundId = state.backgroundId;
+    msg.format = state.format;
+    state.busy = true;
+    setStatus("busy", msg.useAi ? "ИИ: подготовка запроса…" : "Собираем композицию…");
+    updateButtons();
+    send(msg);
+  }
+
+  function addToFrame() {
+    if (state.busy) return;
+    if (state.selected.length === 0) {
+      setStatus("error", "Выберите хотя бы один компонент.");
+      return;
+    }
+    state.busy = true;
+    setStatus("busy", "Добавляем объекты в выделенный фрейм…");
+    updateButtons();
+    send({
+      type: "add-to-frame",
+      ids: state.selected.map(function (s) { return s.id; }),
+      size: state.size,
+      schemeId: state.schemeId
+    });
+  }
+
+  function exportSvg() {
+    if (state.busy) return;
+    state.busy = true;
+    setStatus("busy", "Экспорт…");
+    updateButtons();
+    send({ type: "export" });
+  }
+
+  function download(name, svg) {
+    var blob = new Blob([svg], { type: "image/svg+xml" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = (name || "composition") + ".svg";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function copySvg() {
+    var area = $("svg");
+    if (!area.value) {
+      setStatus("error", "Сначала выполните экспорт SVG.");
+      return;
+    }
+    area.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    setStatus(ok ? "ok" : "error", ok ? "SVG скопирован." : "Не удалось скопировать. Выделите текст вручную.");
+  }
+
+  function renderAi() {
+    var a = state.ai;
+    if (!a) return;
+    $("ai-provider").value = a.providerId;
+    $("ai-base").value = a.baseUrl || "";
+    $("ai-model").value = a.model || "";
+    var provider = currentProvider();
+    $("ai-base-wrap").classList.toggle("hidden", !(provider && provider.baseUrlEditable));
+    $("ai-model").placeholder = provider ? provider.modelHint : "имя модели";
+    $("ai-key-state").textContent = a.hasKey ? "Ключ сохранён: ••••" + a.keyHint : "Ключ не сохранён";
+    renderAiSummary();
+  }
+
+  function renderAiSummary() {
+    var summary = state.aiMode === "ai"
+      ? (state.ai && state.ai.hasKey ? "AI API · ключ сохранён" : "AI API · без ключа")
+      : "Локально";
+    $("ai-summary").textContent = summary;
+    $("ai-fields").classList.toggle("hidden", state.aiMode !== "ai");
+    $("ai-local-note").classList.toggle("hidden", state.aiMode === "ai");
+    var modes = document.querySelectorAll("[data-mode]");
+    for (var i = 0; i < modes.length; i++) {
+      modes[i].setAttribute("aria-pressed", String(modes[i].getAttribute("data-mode") === state.aiMode));
+    }
+  }
+
+  function saveAi() {
+    setAiStatus("busy", "Сохраняем…");
+    state.aiPending = true;
+    send({
+      type: "ai-save",
+      settings: {
+        providerId: $("ai-provider").value,
+        model: $("ai-model").value.trim(),
+        baseUrl: $("ai-base").value.trim(),
+        apiKey: $("ai-key").value.trim()
+      }
+    });
+  }
+
+  function deleteAi() {
+    setAiStatus("busy", "Удаляем ключ…");
+    state.aiPending = true;
+    send({ type: "ai-delete" });
+  }
+
+  function onMessage(event) {
+    var m = event.data && event.data.pluginMessage;
+    if (!m) return;
+
+    if (m.type === "init") {
+      state.init = m;
+      var select = $("ai-provider");
+      select.textContent = "";
+      m.providers.forEach(function (p) {
+        var opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.label;
+        select.appendChild(opt);
+      });
+      renderSchemes();
+      renderBackgrounds();
+      renderFormats();
+      renderAi();
+      updateButtons();
+      if (m.libraryError) {
+        setStatus("error", "Библиотека не загружена: " + m.libraryError);
+      }
+      state.diag.info = "Компонентов в библиотеке: " + m.componentCount + (m.libraryError ? "\nОшибка: " + m.libraryError : "");
+      renderDiag();
+      return;
+    }
+
+    if (m.type === "library") {
+      state.library[m.size] = m.items;
+      if (m.size === state.size) renderLibrary();
+      return;
+    }
+
+    if (m.type === "progress") {
+      setStatus("busy", m.text);
+      return;
+    }
+
+    if (m.type === "generated") {
+      state.busy = false;
+      state.diag.explain = m.lines;
+      state.diag.concepts = m.concepts;
+      state.diag.info = "Слоёв: " + m.count + (m.notice ? " · " + m.notice : "") + "\nФрейм: " + m.name + (m.count === 0 ? "" : "\nФормат: " + state.format + ", размер " + state.size);
+      renderDiag();
+      var source = m.aiUsed ? "подбор выполнен нейросетью" : "подбор выполнен локально";
+      setStatus("ok", "Добавлено на страницу: " + m.count + " объектов (" + source + ").");
+      updateButtons();
+      return;
+    }
+
+    if (m.type === "added") {
+      state.busy = false;
+      setStatus("ok", "Добавлено объектов: " + m.count + " в фрейм «" + m.frameName + "».");
+      updateButtons();
+      return;
+    }
+
+    if (m.type === "exported") {
+      state.busy = false;
+      $("svg").value = m.svg;
+      download(m.name, m.svg);
+      setStatus("ok", "SVG экспортирован.");
+      updateButtons();
+      return;
+    }
+
+    if (m.type === "error") {
+      state.busy = false;
+      setStatus("error", m.message);
+      updateButtons();
+      return;
+    }
+
+    if (m.type === "ai-state") {
+      state.ai = m;
+      renderAi();
+      if (state.aiPending) {
+        state.aiPending = false;
+        $("ai-key").value = "";
+        if (m.blockReason) {
+          setAiStatus("error", "Не готово: " + m.blockReason + ".");
+        } else {
+          setAiStatus("ok", "Настройки сохранены. Подбор через ИИ будет использован при создании композиции.");
+        }
+      }
+    }
+  }
+
+  // Обработчики интерфейса.
+  document.querySelectorAll("[data-tab]").forEach(function (b) {
+    b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); });
+  });
+  document.querySelectorAll("[data-size]").forEach(function (b) {
+    b.addEventListener("click", function () { setSize(b.getAttribute("data-size")); });
+  });
+  document.querySelectorAll("[data-query]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      $("query").value = b.getAttribute("data-query");
+      updateButtons();
+    });
+  });
+  $("query").addEventListener("input", updateButtons);
+  $("search").addEventListener("input", function (e) {
+    state.search = e.target.value;
+    renderLibrary();
+  });
+  $("create-describe").addEventListener("click", generate);
+  $("insert").addEventListener("click", generate);
+  $("add-frame").addEventListener("click", addToFrame);
+  $("export").addEventListener("click", exportSvg);
+  $("copy-svg").addEventListener("click", copySvg);
+
+  function toggleSection(buttonId, bodyId) {
+    var btn = $(buttonId);
+    var body = $(bodyId);
+    var open = btn.getAttribute("aria-expanded") !== "true";
+    btn.setAttribute("aria-expanded", String(open));
+    body.classList.toggle("hidden", !open);
+    return open;
+  }
+  $("diag-toggle").addEventListener("click", function () { toggleSection("diag-toggle", "diag-body"); });
+  $("ai-toggle").addEventListener("click", function () { toggleSection("ai-toggle", "ai-body"); });
+  $("btn-ai").addEventListener("click", function () {
+    if ($("ai-toggle").getAttribute("aria-expanded") !== "true") toggleSection("ai-toggle", "ai-body");
+    $("ai-body").scrollIntoView({ block: "nearest" });
+  });
+
+  document.querySelectorAll("[data-mode]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      state.aiMode = b.getAttribute("data-mode");
+      renderAiSummary();
+    });
+  });
+  $("ai-provider").addEventListener("change", function () {
+    var provider = currentProvider();
+    $("ai-base-wrap").classList.toggle("hidden", !(provider && provider.baseUrlEditable));
+    $("ai-model").placeholder = provider ? provider.modelHint : "имя модели";
+  });
+  $("ai-key-toggle").addEventListener("click", function () {
+    var input = $("ai-key");
+    var show = input.type === "password";
+    input.type = show ? "text" : "password";
+    $("ai-key-toggle").textContent = show ? "Скрыть" : "Показать";
+  });
+  $("ai-save").addEventListener("click", saveAi);
+  $("ai-delete").addEventListener("click", deleteAi);
+
+  window.addEventListener("message", onMessage);
+  renderSizes();
+  renderTabs();
+  renderSelected();
+  updateButtons();
+  send({ type: "ui-ready" });
+})();
+</script>
+</body>
+</html>

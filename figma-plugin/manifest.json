@@ -1,0 +1,13 @@
+{
+  "name": "Illustration Composer",
+  "id": "REPLACE_WITH_FIGMA_PLUGIN_ID",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["https://api.groq.com"],
+    "reasoning": "Запрос подбора объектов к нейросети Groq по описанию пользователя. Ключ API вводит пользователь."
+  }
+}
